@@ -10,4 +10,20 @@ import java.util.List;
 public class Players {
     private String name;
     private List<Integer> card;
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setCard(List<Integer> card) {
+        this.card = card;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Integer> getCard() {
+        return card;
+    }
 }
