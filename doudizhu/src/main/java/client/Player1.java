@@ -4,13 +4,14 @@ import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class Player1 {
+public class Player1 extends Players{
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-
+        Players players = new Players();
         try {
             System.out.println("请输入名字");
             String name = scanner.nextLine();
+            players.setName(name);
 
             Socket socket = new Socket("127.0.0.1", 8888);
             System.out.println("已经连接服务器");
