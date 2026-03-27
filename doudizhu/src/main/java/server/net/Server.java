@@ -1,5 +1,6 @@
 package server.net;
 
+import client.Player;
 import server.model.GameSession;
 import server.model.PlayerState;
 import server.service.GameSessionManager;
@@ -33,7 +34,7 @@ public class Server {
 
             broadcast("系统：发牌完成，游戏开始！");
             broadcast("系统：底牌已生成，等待后续抢地主逻辑接入。");
-
+            System.out.println("系统：底牌已生成:"+CardUtil.cardsToString(SESSION_MANAGER.getCurrentSession().getHoleCards()));
             startConsoleThread();
 
             for (PlayerConnection player : PLAYERS) {

@@ -69,7 +69,7 @@ public class GameService {
         }
 
         for (String playerName : playerNames) {
-            if (playerName == null || playerName.trim().isEmpty()) {
+            if (playerName == null || playerName.isBlank()) {
                 throw new IllegalArgumentException("玩家名字不能为空");
             }
         }
