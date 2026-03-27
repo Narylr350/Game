@@ -7,30 +7,58 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Server {
+
+    private static final List<PlayerConnection> players = new ArrayList<>();
+
     public static void main(String[] args) {
         final int PORT = 8888;
         final int PLAYER_COUNT = 3;
-
-        List<Socket> players = new ArrayList<>();
-        List<PrintWriter> writers = new ArrayList<>();
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("服务器启动，等待 " + PLAYER_COUNT + " 个客户端连接...");
 
             while (players.size() < PLAYER_COUNT) {
                 Socket socket = serverSocket.accept();
-                players.add(socket);
 
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(socket.getInputStream())
+                );
                 PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-                writers.add(writer);
 
-                System.out.println("第 " + players.size() + " 个客户端已连接："
-                        + socket.getInetAddress() + ":" + socket.getPort());
+                String name = reader.readLine();
+                int playerId = players.size() + 1;
+
+                PlayerConnection player = new PlayerConnection(
+                        playerId, name, socket, reader, writer
+                );
+
+                players.add(player);
+
+                System.out.println("第 " + playerId + " 个客户端已连接："
+                        + socket.getInetAddress() + ":" + socket.getPort()
+                        + "，名字：" + name);
+
+                writer.println("欢迎你，" + name + "，你的编号是：" + playerId);
             }
 
-            System.out.println("3 个客户端已全部连接，开始通信...");
+            System.out.println("3 个客户端已全部连接，开始游戏...");
 
-            // ⭐ 服务器输入线程
+            // ====== 这里调用 Game 发牌 ======
+            Game game = new Game();
+            game.licensing(players.get(0), players.get(1), players.get(2));
+
+            // 给每个玩家发送自己的牌
+            for (PlayerConnection player : players) {
+                String cardMsg = "你的手牌： " + Game.cardsToString(player.getCards());
+                player.getWriter().println(cardMsg);
+            }
+
+            // 给所有玩家发系统消息
+            broadcast("系统：发牌完成，游戏开始！");
+            // 如果你想临时测试底牌，也可以发出来
+//            broadcast("底牌： " + Game.cardsToString(game.getHoleCards()));
+
+            // 控制台输入线程
             new Thread(() -> {
                 try {
                     BufferedReader console = new BufferedReader(
@@ -39,9 +67,7 @@ public class Server {
 
                     String input;
                     while ((input = console.readLine()) != null) {
-                        for (PrintWriter w : writers) {
-                            w.println("服务器：" + input);
-                        }
+                        broadcast("服务器：" + input);
                     }
 
                 } catch (Exception e) {
@@ -50,10 +76,8 @@ public class Server {
             }).start();
 
             // 客户端线程
-            for (int i = 0; i < players.size(); i++) {
-                Socket player = players.get(i);
-                int playerId = i + 1;
-                new Thread(() -> handleClient(player, playerId)).start();
+            for (PlayerConnection player : players) {
+                new Thread(() -> handleClient(player)).start();
             }
 
         } catch (IOException e) {
@@ -61,24 +85,32 @@ public class Server {
         }
     }
 
-    private static void handleClient(Socket player, int playerId) {
+    private static void handleClient(PlayerConnection player) {
         try {
-            System.out.println("开始处理客户端 " + playerId);
-
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(player.getInputStream())
-            );
-
-            String name = reader.readLine();
-            System.out.println("客户端 " + playerId + " 身份：" + name);
+            System.out.println("开始处理客户端 " + player.getPlayerId());
 
             String msg;
-            while ((msg = reader.readLine()) != null) {
-                System.out.println("客户端 " + name + " 说：" + msg);
+            while ((msg = player.getReader().readLine()) != null) {
+                System.out.println(player.getName() + " 说：" + msg);
+                broadcastOthers(player, player.getName() + " 说：" + msg);
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(player.getName() + " 断开连接");
+        }
+    }
+
+    private static void broadcast(String msg) {
+        for (PlayerConnection player : players) {
+            player.getWriter().println(msg);
+        }
+    }
+
+    private static void broadcastOthers(PlayerConnection self, String msg) {
+        for (PlayerConnection player : players) {
+            if (player != self) {
+                player.getWriter().println(msg);
+            }
         }
     }
 }
