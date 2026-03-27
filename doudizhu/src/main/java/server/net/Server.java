@@ -1,4 +1,6 @@
-package server;
+package server.net;
+
+import server.service.GameService;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -44,12 +46,12 @@ public class Server {
             System.out.println("3 个客户端已全部连接，开始游戏...");
 
             // ====== 这里调用 Game 发牌 ======
-            Game game = new Game();
-            game.licensing(players.get(0), players.get(1), players.get(2));
+            GameService game = new GameService();
+            game.dealCards();
 
             // 给每个玩家发送自己的牌
             for (PlayerConnection player : players) {
-                String cardMsg = "你的手牌： " + Game.cardsToString(player.getCards());
+                String cardMsg = "你的手牌： " + GameService.cardsToString(player.getCards());
                 player.getWriter().println(cardMsg);
             }
 

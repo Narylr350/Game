@@ -4,10 +4,10 @@ import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class Player1 extends Players{
+public class Player1 extends Player {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        Players players = new Players();
+        Player players = new Player();
         try {
             System.out.println("请输入名字");
             String name = scanner.nextLine();
