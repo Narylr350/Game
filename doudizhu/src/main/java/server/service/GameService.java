@@ -1,88 +1,77 @@
 package server.service;
 
-import client.Player;
+import server.model.DealResult;
+import server.model.GameSession;
+import server.model.PlayerHand;
+import server.model.PlayerState;
+import server.util.CardUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.TreeSet;
 
 public class GameService {
-    static HashMap<Integer, String> cards = new HashMap<>();
-    static ArrayList<Integer> list = new ArrayList<>();
 
-    static {
-        ArrayList<String> numbers = new ArrayList<>();
-        ArrayList<String> suits = new ArrayList<>();
-        ArrayList<String> card = new ArrayList<>();
+    public DealResult deal(List<String> playerNames) {
+        validatePlayerNames(playerNames);
 
-        Collections.addAll(numbers, "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2");
-        Collections.addAll(suits, "⬛️", "♣️", "♥️", "♠️");
-
-        for (String number : numbers) {
-            for (String suit : suits) {
-                card.add(number + suit);
-            }
-        }
-        card.add("小王");
-        card.add("大王");
-
-        for (int i = 0; i < card.size(); i++) {
-            cards.put(i + 1, card.get(i));
-            list.add(i + 1);
-        }
-    }
-
-    public List<Player> dealCards(String name1, String name2, String name3, Player player1, Player player2, Player player3) {
-        List<Player> playerList = new ArrayList<>();
-        Collections.shuffle(list);
-        Player holeCard = new Player();
-
-        TreeSet<Integer> p1 = new TreeSet<>();
-        TreeSet<Integer> p2 = new TreeSet<>();
-        TreeSet<Integer> p3 = new TreeSet<>();
+        List<Integer> shuffledDeck = CardUtil.createShuffledDeck();
+        List<TreeSet<Integer>> playerCards = new ArrayList<>();
         TreeSet<Integer> holeCards = new TreeSet<>();
 
-        for (int i = 0; i < list.size(); i++) {
+        for (int i = 0; i < playerNames.size(); i++) {
+            playerCards.add(new TreeSet<>());
+        }
+
+        for (int i = 0; i < shuffledDeck.size(); i++) {
+            Integer cardId = shuffledDeck.get(i);
             if (i < 3) {
-                holeCards.add(list.get(i));
+                holeCards.add(cardId);
                 continue;
             }
-            if (i % 3 == 0) {
-                p1.add(list.get(i));
-            }
-            if (i % 3 == 1) {
-                p2.add(list.get(i));
-            }
-            if (i % 3 == 2) {
-                p3.add(list.get(i));
-            }
+
+            int playerIndex = (i - 3) % playerNames.size();
+            playerCards.get(playerIndex).add(cardId);
         }
 
-        player1.setName(name1);
-        player2.setName(name2);
-        player3.setName(name3);
-        holeCard.setName("底牌");
-        player1.setCard(p1);
-        player2.setCard(p2);
-        player3.setCard(p3);
-        holeCard.setCard(holeCards);
+        List<PlayerHand> playerHands = new ArrayList<>();
+        for (int i = 0; i < playerNames.size(); i++) {
+            playerHands.add(new PlayerHand(i + 1, playerNames.get(i), playerCards.get(i)));
+        }
 
-        playerList.add(player1);
-        playerList.add(player2);
-        playerList.add(player3);
-        playerList.add(holeCard);
-
-        return playerList;
+        return new DealResult(playerHands, holeCards);
     }
 
-    public void findCards(Set<Integer> lists) {
-        for (int list : lists) {
-            String card = cards.get(list);
-            System.out.print(card + " \t");
+    public GameSession startGame(List<String> playerNames) {
+        DealResult dealResult = deal(playerNames);
+        List<PlayerState> players = new ArrayList<>();
+
+        for (PlayerHand hand : dealResult.getPlayerHands()) {
+            players.add(new PlayerState(
+                    hand.getPlayerId(),
+                    hand.getPlayerName(),
+                    hand.getCards(),
+                    false,
+                    true
+            ));
         }
-        System.out.println();
+
+        GameSession session = new GameSession(players, dealResult.getHoleCards());
+        session.setGameStarted(true);
+        session.setGameFinished(false);
+        session.setCurrentTurnPlayerId(players.get(0).getPlayerId());
+        return session;
+    }
+
+    private void validatePlayerNames(List<String> playerNames) {
+        if (playerNames == null || playerNames.size() != 3) {
+            throw new IllegalArgumentException("斗地主必须有 3 个玩家");
+        }
+
+        for (String playerName : playerNames) {
+            if (playerName == null || playerName.trim().isEmpty()) {
+                throw new IllegalArgumentException("玩家名字不能为空");
+            }
+        }
     }
 }

@@ -3,15 +3,13 @@ package server.net;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.List;
 
 public class PlayerConnection {
-    private int playerId;
-    private String name;
-    private Socket socket;
-    private BufferedReader reader;
-    private PrintWriter writer;
-    private List<Integer> cards;
+    private final int playerId;
+    private final String name;
+    private final Socket socket;
+    private final BufferedReader reader;
+    private final PrintWriter writer;
 
     public PlayerConnection(int playerId, String name, Socket socket,
                             BufferedReader reader, PrintWriter writer) {
@@ -42,11 +40,7 @@ public class PlayerConnection {
         return writer;
     }
 
-    public List<Integer> getCards() {
-        return cards;
-    }
-
-    public void setCards(List<Integer> cards) {
-        this.cards = cards;
+    public void send(String message) {
+        writer.println(message);
     }
 }
