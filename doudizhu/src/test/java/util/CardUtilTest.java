@@ -20,6 +20,7 @@ class CardUtilTest {
                 .boxed()
                 .collect(Collectors.toSet());
 
+        assertEquals(54, deck.size());
         assertEquals(expectedCards, Set.copyOf(deck));
     }
 
