@@ -37,7 +37,10 @@ public class GameFlow {
 
     public GameRoom startRoom(List<String> playerNames) {
         DealResult dealResult = deal(playerNames);
-        return new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
+        GameRoom room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
+        room.setGameStarted(true);
+        room.setGameFinished(false);
+        return room;
     }
 
     private void validatePlayerNames(List<String> playerNames) {
@@ -46,7 +49,7 @@ public class GameFlow {
         }
 
         for (String playerName : playerNames) {
-            if (playerName == null || playerName.trim().isEmpty()) {
+            if (playerName == null || playerName.isBlank()) {
                 throw new IllegalArgumentException("玩家名称不能为空");
             }
         }
