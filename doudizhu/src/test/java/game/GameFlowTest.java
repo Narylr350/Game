@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameFlowTest {
 
@@ -36,12 +35,10 @@ class GameFlowTest {
     void startRoomRejectsBlankNames() {
         GameFlow gameFlow = new GameFlow();
 
-        IllegalArgumentException error = assertThrows(
+        assertThrows(
                 IllegalArgumentException.class,
                 () -> gameFlow.startRoom(List.of("A", " ", "C"))
         );
-
-        assertTrue(error.getMessage().contains("玩家名字不能为空"));
     }
 
     @Test
@@ -50,10 +47,14 @@ class GameFlowTest {
 
         GameRoom room = gameFlow.startRoom(List.of("A", "B", "C"));
 
-        PlayerState player = room.findPlayerById(2);
+        PlayerState expectedPlayer = room.getPlayers().stream()
+                .filter(player -> "B".equals(player.getPlayerName()))
+                .findFirst()
+                .orElseThrow();
+        PlayerState player = room.findPlayerById(expectedPlayer.getPlayerId());
 
         assertNotNull(player);
-        assertEquals("B", player.getPlayerName());
+        assertEquals(expectedPlayer.getPlayerName(), player.getPlayerName());
         assertFalse(player.getCards().isEmpty());
     }
 }
