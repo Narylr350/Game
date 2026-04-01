@@ -12,4 +12,8 @@ public class LandlordRule {
             throw new IllegalArgumentException("玩家不存在");
         }
     }
+    public void callLandlord(GameRoom room, int playerId){
+        canCallLandlord(room,playerId);
+
+    }
 }
