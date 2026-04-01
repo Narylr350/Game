@@ -82,6 +82,21 @@ class GameFlowTest {
     }
 
     @Test
+    void setLandlordNullClearsLandlordStateWithoutThrowing() {
+        GameFlow gameFlow = new GameFlow();
+
+        GameRoom room = gameFlow.startRoom(List.of("A", "B", "C"));
+        room.setLandlord(room.getPlayers().get(0).getPlayerId());
+
+        room.setLandlord(null);
+
+        assertEquals(null, room.getLandlordPlayerId());
+        for (PlayerState player : room.getPlayers()) {
+            assertFalse(player.isLandlord());
+        }
+    }
+
+    @Test
     void findPlayerByIdReturnsExistingPlayer() {
         GameFlow gameFlow = new GameFlow();
 

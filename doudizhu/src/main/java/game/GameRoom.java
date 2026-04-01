@@ -41,7 +41,7 @@ public class GameRoom {
     public void setLandlord(Integer landlordPlayerId) {
         this.landlordPlayerId = landlordPlayerId;
         for (PlayerState player : players) {
-            player.setLandlord(player.getPlayerId() == landlordPlayerId);
+            player.setLandlord(landlordPlayerId != null && player.getPlayerId() == landlordPlayerId);
         }
     }
 
