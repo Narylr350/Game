@@ -2,6 +2,7 @@ package rule;
 
 import game.GameRoom;
 
+// Stage-one placeholder: only basic room/player validation is wired for now.
 public class LandlordRule {
     public void canCallLandlord(GameRoom room, int playerId) {
         if (room == null) {
