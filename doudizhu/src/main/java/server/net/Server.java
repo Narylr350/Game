@@ -1,10 +1,9 @@
 package server.net;
 
-import client.Player;
-import server.model.GameSession;
-import server.model.PlayerState;
-import server.service.GameSessionManager;
-import server.util.CardUtil;
+import game.GameFlow;
+import game.GameRoom;
+import game.PlayerState;
+import util.CardUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,7 +16,8 @@ import java.util.List;
 
 public class Server {
     private static final List<PlayerConnection> PLAYERS = new ArrayList<>();
-    private static final GameSessionManager SESSION_MANAGER = new GameSessionManager();
+    private static final GameFlow GAME_FLOW = new GameFlow();
+    private static GameRoom currentRoom;
 
     public static void main(String[] args) {
         final int port = 8888;
@@ -29,12 +29,12 @@ public class Server {
             acceptPlayers(serverSocket, playerCount);
 
             System.out.println(playerCount + " 个客户端已全部连接，开始游戏...");
-            GameSession session = SESSION_MANAGER.startGame(collectPlayerNames());
-            sendOpeningHands(session);
+            currentRoom = GAME_FLOW.startRoom(collectPlayerNames());
+            sendOpeningHands(currentRoom);
 
             broadcast("系统：发牌完成，游戏开始！");
             broadcast("系统：底牌已生成，等待后续抢地主逻辑接入。");
-            System.out.println("系统：底牌已生成:"+CardUtil.cardsToString(SESSION_MANAGER.getCurrentSession().getHoleCards()));
+            System.out.println("系统：底牌已生成:" + CardUtil.cardsToString(currentRoom.getHoleCards()));
             startConsoleThread();
 
             for (PlayerConnection player : PLAYERS) {
@@ -73,9 +73,9 @@ public class Server {
         return playerNames;
     }
 
-    private static void sendOpeningHands(GameSession session) {
+    private static void sendOpeningHands(GameRoom room) {
         for (PlayerConnection connection : PLAYERS) {
-            PlayerState playerState = session.findPlayerById(connection.getPlayerId());
+            PlayerState playerState = room.findPlayerById(connection.getPlayerId());
             if (playerState == null) {
                 continue;
             }
