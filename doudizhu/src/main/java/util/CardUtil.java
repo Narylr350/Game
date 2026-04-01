@@ -45,8 +45,22 @@ public final class CardUtil {
     }
 
     public static String cardsToString(Collection<Integer> cardIds) {
+        if (cardIds == null) {
+            throw new IllegalArgumentException("cardIds 不能为空");
+        }
+
         return cardIds.stream()
-                .map(CARD_DICTIONARY::get)
+                .map(cardId -> {
+                    if (cardId == null) {
+                        throw new IllegalArgumentException("cardIds 中不能包含空牌号");
+                    }
+
+                    String card = CARD_DICTIONARY.get(cardId);
+                    if (card == null) {
+                        throw new IllegalArgumentException("未知的牌号: " + cardId);
+                    }
+                    return card;
+                })
                 .collect(Collectors.joining(" "));
     }
 }

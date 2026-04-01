@@ -12,31 +12,27 @@ public class GameFlow {
         validatePlayerNames(playerNames);
 
         List<Integer> shuffledDeck = CardUtil.createShuffledDeck();
-        List<PlayerState> players = new ArrayList<>();
         List<TreeSet<Integer>> hands = new ArrayList<>();
         TreeSet<Integer> holeCards = new TreeSet<>();
 
         for (int i = 0; i < 3; i++) {
-            players.add(new PlayerState(i + 1, playerNames.get(i), new TreeSet<>()));
             hands.add(new TreeSet<>());
         }
 
-        for (int i = 0; i < shuffledDeck.size(); i++) {
-            int cardId = shuffledDeck.get(i);
-            if (i < 51) {
-                hands.get(i % 3).add(cardId);
-            } else {
-                holeCards.add(cardId);
-            }
+        for (int i = 0; i < 3; i++) {
+            holeCards.add(shuffledDeck.get(i));
         }
 
-        List<PlayerState> dealtPlayers = new ArrayList<>();
-        for (int i = 0; i < players.size(); i++) {
-            PlayerState player = players.get(i);
-            dealtPlayers.add(new PlayerState(player.getPlayerId(), player.getPlayerName(), hands.get(i)));
+        for (int i = 3; i < shuffledDeck.size(); i++) {
+            hands.get((i - 3) % 3).add(shuffledDeck.get(i));
         }
 
-        return new DealResult(dealtPlayers, holeCards);
+        List<PlayerState> players = new ArrayList<>();
+        for (int i = 0; i < playerNames.size(); i++) {
+            players.add(new PlayerState(i + 1, playerNames.get(i), hands.get(i)));
+        }
+
+        return new DealResult(players, holeCards);
     }
 
     public GameRoom startRoom(List<String> playerNames) {
@@ -46,12 +42,12 @@ public class GameFlow {
 
     private void validatePlayerNames(List<String> playerNames) {
         if (playerNames == null || playerNames.size() != 3) {
-            throw new IllegalArgumentException("Exactly 3 player names are required");
+            throw new IllegalArgumentException("需要且仅需要3个玩家名称");
         }
 
         for (String playerName : playerNames) {
             if (playerName == null || playerName.trim().isEmpty()) {
-                throw new IllegalArgumentException("Player names must be non-blank");
+                throw new IllegalArgumentException("玩家名称不能为空");
             }
         }
     }
