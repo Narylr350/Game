@@ -8,12 +8,14 @@ public class PlayerState {
     private final TreeSet<Integer> cards;
     private boolean landlord;
     private boolean online;
+    private int score;
 
     public PlayerState(int playerId, String playerName, TreeSet<Integer> cards) {
         this.playerId = playerId;
         this.playerName = playerName;
         this.cards = new TreeSet<>(cards);
         this.online = true;
+        this.score = 0;
     }
 
     public int getPlayerId() {
@@ -46,5 +48,13 @@ public class PlayerState {
 
     public void addCards(TreeSet<Integer> extraCards) {
         cards.addAll(extraCards);
+    }
+
+    public void addScore() {
+        score++;
+    }
+
+    public int getScore() {
+        return score;
     }
 }
