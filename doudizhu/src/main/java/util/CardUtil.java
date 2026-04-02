@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// 纯工具类：负责牌堆模板和牌面显示，不参与对局流程控制。
 public final class CardUtil {
     private static final Map<Integer, String> CARD_DICTIONARY = new HashMap<>();
     private static final List<Integer> DECK_TEMPLATE = new ArrayList<>();
@@ -44,6 +45,7 @@ public final class CardUtil {
         return deck;
     }
 
+    // 这里显式校验非法牌号，避免坏数据沿着主流程一路传下去。
     public static String cardsToString(Collection<Integer> cardIds) {
         if (cardIds == null) {
             throw new IllegalArgumentException("cardIds 不能为空");

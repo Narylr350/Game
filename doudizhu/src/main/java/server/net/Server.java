@@ -14,9 +14,11 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+// 当前服务端入口只负责收连接、开一局并把手牌发出去。
 public class Server {
     private static final List<PlayerConnection> PLAYERS = new ArrayList<>();
     private static final GameFlow GAME_FLOW = new GameFlow();
+    // 现阶段只维护单局房间，先不引入额外的房间管理层。
     private static GameRoom currentRoom;
 
     public static void main(String[] args) {
@@ -73,6 +75,7 @@ public class Server {
         return playerNames;
     }
 
+    // 按连接编号找到对应玩家，把各自手牌发回客户端。
     private static void sendOpeningHands(GameRoom room) {
         for (PlayerConnection connection : PLAYERS) {
             PlayerState playerState = room.findPlayerById(connection.getPlayerId());

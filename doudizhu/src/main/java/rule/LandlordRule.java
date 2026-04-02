@@ -22,7 +22,7 @@ public class LandlordRule {
         System.out.println("抢地主?");
         String input = new Scanner(System.in).nextLine();
         Random random = new Random();
-        int firstPlayerId = random.nextInt(1, 2);
+        int firstPlayerId = random.nextInt(0,2);
         if ("抢地主".equals(input)) {
             PlayerState playerById = room.findPlayerById(firstPlayerId);
             playerById.addScore();

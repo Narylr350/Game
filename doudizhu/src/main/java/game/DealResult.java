@@ -3,6 +3,7 @@ package game;
 import java.util.List;
 import java.util.TreeSet;
 
+// 发牌后的临时结果对象：把玩家手牌和底牌一起交给上层组装房间。
 public class DealResult {
     private final List<PlayerState> players;
     private final TreeSet<Integer> holeCards;

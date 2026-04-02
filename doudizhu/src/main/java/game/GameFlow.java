@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
+// 第 1 阶段的主流程入口：负责校验玩家、发牌并生成单局房间。
 public class GameFlow {
 
+    // 这里只做开局发牌，不提前接入抢地主和出牌规则。
     public DealResult deal(List<String> playerNames) {
         validatePlayerNames(playerNames);
 
@@ -35,6 +37,7 @@ public class GameFlow {
         return new DealResult(players, holeCards);
     }
 
+    // 服务端当前通过这个入口拿到“已经开局的一局”。
     public GameRoom startRoom(List<String> playerNames) {
         DealResult dealResult = deal(playerNames);
         GameRoom room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
@@ -43,6 +46,7 @@ public class GameFlow {
         return room;
     }
 
+    // 名字校验要兼容中文输入法下的全角空格。
     private void validatePlayerNames(List<String> playerNames) {
         if (playerNames == null || playerNames.size() != 3) {
             throw new IllegalArgumentException("需要且仅需要3个玩家名称");
