@@ -37,6 +37,9 @@ public class Server {
             broadcast("系统：发牌完成，游戏开始！");
             broadcast("系统：底牌已生成，等待后续抢地主逻辑接入。");
             System.out.println("系统：底牌已生成:" + CardUtil.cardsToString(currentRoom.getHoleCards()));
+            //地主出现后发送底牌给所有人
+            //broadcast("底牌:"+ CardUtil.cardsToString(currentRoom.getHoleCards()));
+            //创建开始服务器线程
             startConsoleThread();
 
             for (PlayerConnection player : PLAYERS) {
@@ -47,6 +50,7 @@ public class Server {
         }
     }
 
+    //接收发来的名字，将其分别创建对象PlayerConnection 放入PLAYERS集合
     private static void acceptPlayers(ServerSocket serverSocket, int playerCount) throws IOException {
         while (PLAYERS.size() < playerCount) {
             Socket socket = serverSocket.accept();
@@ -115,12 +119,14 @@ public class Server {
         }).start();
     }
 
+    //发送消息给所有人
     private static void broadcast(String msg) {
         for (PlayerConnection player : PLAYERS) {
             player.send(msg);
         }
     }
 
+    // 服务器将消息广播给除发送者(self)以外的所有玩家
     private static void broadcastOthers(PlayerConnection self, String msg) {
         for (PlayerConnection player : PLAYERS) {
             if (player != self) {
@@ -128,4 +134,37 @@ public class Server {
             }
         }
     }
+    //服务器发送给某一个人 通过id查找
+    private static void sendMsgToPlayer(int id,String msg) {
+        for (PlayerConnection player : PLAYERS) {
+            if (player.getPlayerId() == id) {
+                player.send(msg);
+            }
+        }
+    }
+
+    //玩家发送的消息只传给服务器
+//    private static Rseult returnServer(PlayerConnection self){
+//
+////        Rseult Rseult = new Rseult(self.getPlayerId(),);
+//
+//
+//        return Rseult;
+//    }
+
+
+
+
+}
+class Rseult{
+    boolean finished;
+    boolean readl;
+
+    Integer currentID;//当前ID
+    Integer nextPlayerID;//下一个玩家ID
+    Integer landlordPlayerID;//地主ID
+
+    String message;
+
+
 }

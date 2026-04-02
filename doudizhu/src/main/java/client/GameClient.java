@@ -9,12 +9,14 @@ import java.util.Scanner;
 public class GameClient {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        final String host = "192.168.10.2";
+        final int port = 8888;
 
         try {
             System.out.println("请输入名字");
             String name = scanner.nextLine();
 
-            Socket socket = new Socket("127.0.0.1", 8888);
+            Socket socket = new Socket(host, port);
             System.out.println("已经连接服务器");
 
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
@@ -40,6 +42,7 @@ public class GameClient {
         }
     }
 
+    // 客户端开启监听线程，接收服务端消息并显示
     private static void startMessageReader(Socket socket) {
         new Thread(() -> {
             try {
