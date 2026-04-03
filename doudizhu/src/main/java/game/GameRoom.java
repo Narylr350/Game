@@ -9,16 +9,39 @@ import java.util.TreeSet;
 public class GameRoom {
     private final List<PlayerState> players;
     private final TreeSet<Integer> holeCards;
-    private Integer currentTurnPlayerId;
-    private Integer landlordPlayerId;
-    private Integer lastHighestScorerId;
     private boolean gameStarted;
     private boolean gameFinished;
-    private boolean landlordPhase;
+    private boolean landlordPhase;          // 当前是否处于抢地主阶段
+    private Integer currentTurnPlayerId;    // 当前轮到谁操作
+    private Integer landlordPlayerId;       // 最终地主是谁，没确定前为 null
+    private Integer lastHighestScorerId;    // 最后一个达到当前最高分的玩家
+    private int highestLandlordScore;       // 当前抢地主阶段的最高分
+    private int passCountAfterLastRaise;    // 自从“最后一次有人加分”后，连续有多少次没人再加分
+
 
     public GameRoom(List<PlayerState> players, TreeSet<Integer> holeCards) {
         this.players = new ArrayList<>(players);
         this.holeCards = new TreeSet<>(holeCards);
+    }
+
+    public Integer setLastHighestScorerId(String message) {
+        int lastHighestScorerId = 0;
+        if ("抢".equals(message)){
+            lastHighestScorerId = currentTurnPlayerId;
+        }
+        return this.lastHighestScorerId = lastHighestScorerId;
+    }
+
+    public Integer getLastHighestScorerId() {
+        return lastHighestScorerId;
+    }
+
+    public Integer setPassCountAfterLastRaise() {
+        return passCountAfterLastRaise++;
+    }
+
+    public Integer getPassCountAfterLastRaise() {
+        return passCountAfterLastRaise;
     }
 
     public List<PlayerState> getPlayers() {

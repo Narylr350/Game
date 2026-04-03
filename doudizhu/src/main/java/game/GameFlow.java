@@ -46,6 +46,11 @@ public class GameFlow {
         return room;
     }
 
+    //重新发牌
+    public GameRoom reDeal(){
+        return null;
+    }
+
     // 名字校验要兼容中文输入法下的全角空格。
     private void validatePlayerNames(List<String> playerNames) {
         if (playerNames == null || playerNames.size() != 3) {
