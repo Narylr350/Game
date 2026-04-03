@@ -142,6 +142,21 @@ public class Server {
             }
         }
     }
+    //定义各个消息
+    public static String getMessage(MessageType type) {
+        switch (type) {
+            case CALL_LANDLORD:
+                return "1.叫地主 2.不叫";
+            case ROB_LANDLORD:
+                return "1.抢地主 2.不抢";
+            case PLAY_CARD:
+                return "请输入要出的牌";
+            case PASS:
+                return "不出";
+            default:
+                return "";
+        }
+    }
 
     //玩家发送的消息只传给服务器
 //    private static Rseult returnServer(PlayerConnection self){
