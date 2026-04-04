@@ -13,11 +13,13 @@ public class GameFlow {
     private GamePhase currentPhase;
     private CallLanLordHandler callLanLord;
 
-    public void handlePlayerAction(GameRoom room, ActionType actionType) {
+    public ActionResult handlePlayerAction(GameRoom room) {
         currentPhase = room.getPhase();
+        ActionResult result = null;
         if (currentPhase == GamePhase.CALL_LANDLORD) {
-            callLanLord.callLandLordHandler(room);
+            result = callLanLord.callLandLordHandler(room);
         }
+        return result;
     }
 
     // 开局发牌。
