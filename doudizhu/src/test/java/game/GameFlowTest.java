@@ -9,7 +9,9 @@ import java.util.TreeSet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameFlowTest {
 
@@ -57,10 +59,8 @@ class GameFlowTest {
 
         GameRoom room = gameFlow.startRoom(List.of("A", "B", "C"));
 
-        assertEquals(true, room.isGameStarted());
-        assertEquals(false, room.isGameFinished());
-        assertEquals(null, room.getLandlordPlayerId());
-        assertEquals(null, room.getCurrentTurnPlayerId());
+        assertNull(room.getLandlordPlayerId());
+        assertNull(room.getCurrentTurnPlayerId());
     }
 
     @Test
@@ -71,14 +71,15 @@ class GameFlowTest {
         PlayerState landlord = room.getPlayers().get(0);
 
         room.setCurrentTurnPlayerId(landlord.getPlayerId());
-        room.setLandlord(landlord.getPlayerId());
+        room.setLandlordId(landlord.getPlayerId());
         landlord.addCards(room.getHoleCards());
 
         assertEquals(landlord.getPlayerId(), room.getCurrentTurnPlayerId());
         assertEquals(landlord.getPlayerId(), room.getLandlordPlayerId());
-        assertEquals(true, landlord.isLandlord());
+        assertTrue(landlord.isLandlord());
         assertEquals(20, landlord.getCards().size());
-        assertEquals(true, landlord.getCards().containsAll(room.getHoleCards()));
+        assertTrue(landlord.getCards()
+                .containsAll(room.getHoleCards()));
     }
 
     @Test
@@ -86,11 +87,11 @@ class GameFlowTest {
         GameFlow gameFlow = new GameFlow();
 
         GameRoom room = gameFlow.startRoom(List.of("A", "B", "C"));
-        room.setLandlord(room.getPlayers().get(0).getPlayerId());
+        room.setLandlordId(room.getPlayers().get(0).getPlayerId());
 
-        room.setLandlord(null);
+        room.setLandlordId(null);
 
-        assertEquals(null, room.getLandlordPlayerId());
+        assertNull(room.getLandlordPlayerId());
         for (PlayerState player : room.getPlayers()) {
             assertFalse(player.isLandlord());
         }

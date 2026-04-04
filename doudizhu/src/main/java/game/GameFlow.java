@@ -1,15 +1,26 @@
 package game;
 
+import game.handler.CallLanLordHandler;
 import util.CardUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.TreeSet;
 
-// 第 1 阶段的主流程入口：负责校验玩家、发牌并生成单局房间。
 public class GameFlow {
+    private GameRoom room;
+    private GamePhase currentPhase;
+    private CallLanLordHandler callLanLord;
 
-    // 这里只做开局发牌，不提前接入抢地主和出牌规则。
+    public void handlePlayerAction(GameRoom room, ActionType actionType) {
+        currentPhase = room.getPhase();
+        if (currentPhase == GamePhase.CALL_LANDLORD) {
+            callLanLord.callLandLordHandler(room);
+        }
+    }
+
+    // 开局发牌。
     public DealResult deal(List<String> playerNames) {
         validatePlayerNames(playerNames);
 
@@ -26,7 +37,8 @@ public class GameFlow {
         }
 
         for (int i = 3; i < shuffledDeck.size(); i++) {
-            hands.get((i - 3) % 3).add(shuffledDeck.get(i));
+            hands.get((i - 3) % 3)
+                    .add(shuffledDeck.get(i));
         }
 
         List<PlayerState> players = new ArrayList<>();
@@ -39,15 +51,25 @@ public class GameFlow {
 
     // 服务端当前通过这个入口拿到“已经开局的一局”。
     public GameRoom startRoom(List<String> playerNames) {
+        room.setPhase(GamePhase.DEALING);
         DealResult dealResult = deal(playerNames);
-        GameRoom room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
-        room.setGameStarted(true);
-        room.setGameFinished(false);
+        room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
+        room = startCallLandLord(room);
+        return room;
+    }
+
+    public GameRoom startCallLandLord(GameRoom room) {
+        room.setPhase(GamePhase.CALL_LANDLORD);
+        room.setLandlordId(null);
+        room.setLandlordPlayerId(null);
+        room.setHighestScore(0);
+        room.setActionCount(0);
+        room.setCurrentTurnPlayerId(new Random().nextInt(1, 4));
         return room;
     }
 
     //重新发牌
-    public GameRoom reDeal(){
+    public GameRoom reDeal() {
         return null;
     }
 

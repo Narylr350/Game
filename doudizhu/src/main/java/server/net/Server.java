@@ -1,6 +1,7 @@
 package server.net;
 
 import game.GameFlow;
+import game.GamePhase;
 import game.GameRoom;
 import game.PlayerState;
 import util.CardUtil;
@@ -27,6 +28,8 @@ public class Server {
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("服务器启动，等待 " + playerCount + " 个客户端连接...");
+
+            currentRoom.setPhase(GamePhase.WAITING);
 
             acceptPlayers(serverSocket, playerCount);
 

@@ -2,14 +2,13 @@ package game;
 
 import java.util.TreeSet;
 
-// 只保留当前阶段真正需要的玩家状态，后续玩法扩展时再逐步增加字段。
 public class PlayerState {
     private final int playerId;
     private final String playerName;
     private final TreeSet<Integer> cards;
     private boolean landlord;
     private boolean online;
-    private int score;
+    private int score; //当前抢地主阶段的分值，到2分为地主（抢地主制）
 
     public PlayerState(int playerId, String playerName, TreeSet<Integer> cards) {
         this.playerId = playerId;
