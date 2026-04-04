@@ -1,13 +1,13 @@
 package game;
 
 public class ActionResult {
-    private boolean success;
-    private boolean reDeal;
-    private String message;
-    private Integer nextPlayerId;
-    private Integer sendMessageByPlayerId;
-    private Integer landlordId;
-    private GamePhase phase;
+    private boolean success;                //是否成功
+    private boolean reDeal;                 //是否需要重新发牌
+    private String message;                 //消息内容
+    private Integer nextPlayerId;           //下一个玩家ID
+    private Integer sendMessageByPlayerId;  //通过指定ID向指定玩家发送信息（这个为null默认向所有玩家广播）
+    private Integer landlordId;             //地主ID
+    private GamePhase phase;                //游戏阶段
 
     public ActionResult(boolean success, boolean reDeal, String message, Integer nextPlayerId, Integer sendMessageByPlayerId, Integer landlordId, GamePhase phase) {
         this.success = success;
