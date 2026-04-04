@@ -13,11 +13,15 @@ public class GameFlow {
     private GamePhase currentPhase;
     private CallLanLordHandler callLanLord;
 
-    public ActionResult handlePlayerAction(GameRoom room) {
+    public GameFlow() {
+        this.callLanLord = new CallLanLordHandler();
+    }
+
+    public ActionResult handlePlayerAction(GameRoom room, ActionType actionType) {
         currentPhase = room.getPhase();
         ActionResult result = null;
         if (currentPhase == GamePhase.CALL_LANDLORD) {
-            result = callLanLord.callLandLordHandler(room);
+            result = callLanLord.callLandLordHandler(room, actionType);
         }
         return result;
     }

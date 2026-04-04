@@ -19,7 +19,7 @@ public class ActionResult {
         this.phase = phase;
     }
 
-    //抢地主失败
+    //抢地主失败，当前玩家在赣神魔？
     public static ActionResult fail(String message) {
         ActionResult result = new ActionResult(
                 false,
@@ -33,22 +33,36 @@ public class ActionResult {
         return result;
     }
 
-    //抢地主成功
-    public static ActionResult success(String message, Integer sendMessageByPlayerId, Integer landlordId) {
+    //抢地主失败，轮到你了吗就抢
+    public static ActionResult fail(String message,Integer sendMessageByPlayerId){
         ActionResult result = new ActionResult(
-                true,
+                false,
                 false,
                 message,
                 null,
                 sendMessageByPlayerId,
-                landlordId,
+                null,
+                null
+        );
+        return result;
+    }
+
+    //+1分
+    public static ActionResult success(String message, Integer sendMessageByPlayerId, Integer nextPlayerId) {
+        ActionResult result = new ActionResult(
+                true,
+                false,
+                message,
+                nextPlayerId,
+                sendMessageByPlayerId,
+                null,
                 null
         );
         return result;
     }
 
     //需要重开
-    public static ActionResult success(String message, boolean reDeal) {
+    public static ActionResult succelandlordConfirmedss(String message, boolean reDeal) {
         ActionResult result = new ActionResult(
                 true,
                 true,
@@ -61,7 +75,7 @@ public class ActionResult {
         return result;
     }
 
-    //返回是地主的结果
+    //返回是地主的结果（抢地主成功）
     public static ActionResult isLandLord(String message, Integer landlordId) {
         ActionResult result = new ActionResult(
                 true,

@@ -11,15 +11,24 @@ public class GameRoom {
     private final TreeSet<Integer> holeCards;
     private GamePhase phase;
     private Map<Integer, Integer> playerScores; //玩家分值
-    private int highestScore;               //最高分
-    private int actionCount;                //轮次计数器
+    private int highestScore;                   //最高分
+    private int actionCount;                    //轮次计数器
     private Integer currentTurnPlayerId;        // 当前轮到谁操作
     private Integer landlordPlayerId;           // 最终地主是谁，没确定前为 null
     private Integer lastHighestScorerId;        // 最后一个达到1分的玩家
+    private Integer notCalledCount;             //不抢玩家计算器
 
     public GameRoom(List<PlayerState> players, TreeSet<Integer> holeCards) {
         this.players = new ArrayList<>(players);
         this.holeCards = new TreeSet<>(holeCards);
+    }
+
+    public Integer getNotCalledCount() {
+        return notCalledCount;
+    }
+
+    public void setNotCalledCount(Integer notCalledCount) {
+        this.notCalledCount = notCalledCount;
     }
 
     public GamePhase getPhase() {
