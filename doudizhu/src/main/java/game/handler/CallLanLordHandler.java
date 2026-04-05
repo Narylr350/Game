@@ -2,6 +2,7 @@ package game.handler;
 
 import game.ActionResult;
 import game.ActionType;
+import game.GamePhase;
 import game.GameRoom;
 import rule.LandlordRule;
 
@@ -23,6 +24,8 @@ public class CallLanLordHandler {
 
         //抢地主+1分
         if (ActionType.CALL == actionType) {
+//            //抢了地主改变状态 变为叫地主 @Rainbow
+//            room.setPhase(GamePhase.ROB_LANDLORD);
             //玩家分数 +1
             room.addPlayerScores(playerId);
             //更新最高分
@@ -78,6 +81,6 @@ public class CallLanLordHandler {
             room.setLandlordId(room.getLastHighestScorerId());
             return ActionResult.successLandlordConfirmed("你是地主了", playerId);
         }
-        return ActionResult.success("抢不抢", playerId, room.getCurrentTurnPlayerId());
+        return ActionResult.success("", playerId, room.getCurrentTurnPlayerId());
     }
 }
