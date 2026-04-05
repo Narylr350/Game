@@ -5,16 +5,16 @@ public class ActionResult {
     private boolean reDeal;                 //是否需要重新发牌
     private String message;                 //消息内容
     private Integer nextPlayerId;           //下一个玩家ID
-    private Integer sendMessageByPlayerId;  //通过指定ID向指定玩家发送信息（这个为null默认向所有玩家广播）
+    private Integer targetPlayerId;  //通过指定ID向指定玩家发送信息（这个为null默认向所有玩家广播）
     private Integer landlordId;             //地主ID
     private GamePhase phase;                //游戏阶段
 
-    public ActionResult(boolean success, boolean reDeal, String message, Integer nextPlayerId, Integer sendMessageByPlayerId, Integer landlordId, GamePhase phase) {
+    public ActionResult(boolean success, boolean reDeal, String message, Integer nextPlayerId, Integer targetPlayerId, Integer landlordId, GamePhase phase) {
         this.success = success;
         this.reDeal = reDeal;
         this.message = message;
         this.nextPlayerId = nextPlayerId;
-        this.sendMessageByPlayerId = sendMessageByPlayerId;
+        this.targetPlayerId = targetPlayerId;
         this.landlordId = landlordId;
         this.phase = phase;
     }
@@ -34,13 +34,13 @@ public class ActionResult {
     }
 
     //抢地主失败，轮到你了吗就抢
-    public static ActionResult fail(String message,Integer sendMessageByPlayerId){
+    public static ActionResult fail(String message,Integer targetPlayerId){
         ActionResult result = new ActionResult(
                 false,
                 false,
                 message,
                 null,
-                sendMessageByPlayerId,
+                targetPlayerId,
                 null,
                 null
         );
@@ -48,13 +48,13 @@ public class ActionResult {
     }
 
     //+1分
-    public static ActionResult success(String message, Integer sendMessageByPlayerId, Integer nextPlayerId) {
+    public static ActionResult success(String message, Integer targetPlayerId, Integer nextPlayerId) {
         ActionResult result = new ActionResult(
                 true,
                 false,
                 message,
                 nextPlayerId,
-                sendMessageByPlayerId,
+                targetPlayerId,
                 null,
                 null
         );
@@ -62,7 +62,7 @@ public class ActionResult {
     }
 
     //需要重开
-    public static ActionResult successLandlordConfirmed(String message, boolean reDeal) {
+    public static ActionResult failLandlordConfirmed(String message) {
         ActionResult result = new ActionResult(
                 true,
                 true,
@@ -76,7 +76,7 @@ public class ActionResult {
     }
 
     //返回是地主的结果（抢地主成功）
-    public static ActionResult isLandLord(String message, Integer landlordId) {
+    public static ActionResult successLandlordConfirmed(String message, Integer landlordId) {
         ActionResult result = new ActionResult(
                 true,
                 false,
@@ -135,12 +135,12 @@ public class ActionResult {
         this.nextPlayerId = nextPlayerId;
     }
 
-    public Integer getSendMessageByPlayerId() {
-        return sendMessageByPlayerId;
+    public Integer getTargetPlayerId() {
+        return targetPlayerId;
     }
 
-    public void setSendMessageByPlayerId(Integer sendMessageByPlayerId) {
-        this.sendMessageByPlayerId = sendMessageByPlayerId;
+    public void setTargetPlayerId(Integer targetPlayerId) {
+        this.targetPlayerId = targetPlayerId;
     }
 
     public Integer getLandlordId() {

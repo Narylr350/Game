@@ -14,7 +14,7 @@ public class GameRoom {
     private Map<Integer, Integer> playerScores; //玩家分值
     private int highestScore;                   //最高分
     private int actionCount;                    //轮次计数器
-    private int passCount;             //不抢玩家计算器
+    private int passCount;                      //不抢玩家计算器
     private Integer currentTurnPlayerId;        // 当前轮到谁操作
     private Integer landlordPlayerId;           // 最终地主是谁，没确定前为 null
     private Integer lastHighestScorerId;        // 最后一个达到1分的玩家
@@ -22,9 +22,13 @@ public class GameRoom {
     public GameRoom(List<PlayerState> players, TreeSet<Integer> holeCards) {
         this.players = new ArrayList<>(players);
         this.holeCards = new TreeSet<>(holeCards);
+        this.playerScores = new HashMap<>();
+        for (PlayerState player : players) {
+            this.playerScores.put(player.getPlayerId(), 0);
+        }
     }
 
-    public Integer getPassCount() {
+    public int getPassCount() {
         return passCount;
     }
 
@@ -45,21 +49,19 @@ public class GameRoom {
     }
 
     public void addPlayerScores(Integer playerId) {
-        int playerSCore = 0;
-        Map<Integer, Integer> playerScores = new HashMap<>();
+        int playerSCore = playerScores.get(playerId);
         playerScores.put(playerId, ++playerSCore);
-        this.playerScores = playerScores;
     }
 
-    public Integer getHighestScore() {
+    public int getHighestScore() {
         return highestScore;
     }
 
-    public void setHighestScore(Integer highestScore) {
+    public void setHighestScore(int highestScore) {
         this.highestScore = highestScore;
     }
 
-    public Integer getActionCount() {
+    public int getActionCount() {
         return actionCount;
     }
 

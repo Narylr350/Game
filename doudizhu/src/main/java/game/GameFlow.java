@@ -76,8 +76,10 @@ public class GameFlow {
 
     //重新发牌
     public void reDeal(GameRoom room) {
-        DealResult dealResult = deal(collectPlayerNames(room));
-        this.room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
+        if (room.getPhase() != GamePhase.CALL_LANDLORD){
+            DealResult dealResult = deal(collectPlayerNames(room));
+            this.room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
+        }
     }
 
     public GameRoom getCurrentRoom() {

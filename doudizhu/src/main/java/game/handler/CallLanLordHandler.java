@@ -2,14 +2,13 @@ package game.handler;
 
 import game.ActionResult;
 import game.ActionType;
-import game.GameFlow;
 import game.GameRoom;
 import rule.LandlordRule;
 
 public class CallLanLordHandler {
-    public ActionResult callLandLordHandler(GameRoom room, Integer playerId, ActionType actionType) {
+    public ActionResult callLandLordHandler(GameRoom room, int playerId, ActionType actionType) {
         if (actionType == null) {
-            return ActionResult.fail("当前输入不合法");
+            return ActionResult.fail("你在干赣神魔");
         }
         if (room == null) {
             return ActionResult.fail("房间不能为空");
@@ -17,9 +16,8 @@ public class CallLanLordHandler {
         if (!LandlordRule.canCallLandlord(room)) {
             return ActionResult.fail("不能叫地主");
         }
-        Integer currentTurnPlayerId = room.getCurrentTurnPlayerId();
-        if (!currentTurnPlayerId
-                .equals(playerId)) {
+        int currentTurnPlayerId = room.getCurrentTurnPlayerId();
+        if (currentTurnPlayerId != playerId) {
             return ActionResult.fail("是你吗你就叫");
         }
 
@@ -40,41 +38,46 @@ public class CallLanLordHandler {
             //轮到下一个玩家
             if (playerId == 3) {
                 room.setCurrentTurnPlayerId(1);
+            } else {
+                room.setCurrentTurnPlayerId(playerId + 1);
             }
-            room.setCurrentTurnPlayerId(playerId + 1);
         }
+        //不抢
         if (ActionType.PASS == actionType) {
-            //不抢
             //记录不抢玩家数
             room.addPassCount();
             //设置轮数
             room.addActionCount();
+            //轮到下一个玩家
             if (playerId == 3) {
                 room.setCurrentTurnPlayerId(1);
-
+            } else {
+                room.setCurrentTurnPlayerId(playerId + 1);
             }
-            room.setCurrentTurnPlayerId(playerId + 1);
-
         }
 
         //先到2分的直接判断为地主
         if (room.getPlayerScores()
                 .get(playerId) == 2 && room.getHighestScore() == 2) {
             //将该玩家设为地主
-            room.findPlayerById(playerId).setLandlord(true);
+            room.findPlayerById(playerId)
+                    .setLandlord(true);
             //将该玩家id设为地主id
             room.setLandlordId(playerId);
             //将底牌添加到地主手牌中
-            room.findPlayerById(playerId).addCards(room.getHoleCards());
-        }
-        //在第一轮如果没有人到两分
-        if (room.getActionCount() == 3 && room.getHighestScore() == 1) {
-            room.setLandlordId(room.getLastHighestScorerId());
+            room.findPlayerById(playerId)
+                    .addCards(room.getHoleCards());
+            return ActionResult.successLandlordConfirmed("你是地主了", playerId);
         }
         //如果三人都不抢
         if (room.getPassCount() == 3) {
-            new GameFlow().reDeal(room);
+            return ActionResult.failLandlordConfirmed("重开");
         }
-        return ActionResult.fail("111");
+        //在第一轮如果没有人到两分
+        if (room.getActionCount() == 4 && room.getHighestScore() == 1) {
+            room.setLandlordId(room.getLastHighestScorerId());
+            return ActionResult.successLandlordConfirmed("你是地主了", playerId);
+        }
+        return ActionResult.success("抢不抢", playerId, room.getCurrentTurnPlayerId());
     }
 }
