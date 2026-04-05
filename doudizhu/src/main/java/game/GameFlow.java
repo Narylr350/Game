@@ -20,7 +20,7 @@ public class GameFlow {
     public ActionResult handlePlayerAction(GameRoom room,Integer playerId ,ActionType actionType) {
         currentPhase = room.getPhase();
         ActionResult result = null;
-        if (currentPhase == GamePhase.CALL_LANDLORD) {
+        if (currentPhase == GamePhase.CALL_LANDLORD || currentPhase == GamePhase.ROB_LANDLORD) {
             result = callLanLord.callLandLordHandler(room, playerId ,actionType);
         }
         return result;

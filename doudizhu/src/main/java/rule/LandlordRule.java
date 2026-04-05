@@ -13,7 +13,7 @@ public class LandlordRule {
             return false;
         }
         //当前阶段必须是抢地主阶段
-        if (room.getPhase() != GamePhase.CALL_LANDLORD) {
+        if (room.getPhase() != GamePhase.CALL_LANDLORD ) {//@Rainbwo
             return false;
         }
         //玩家不能为空

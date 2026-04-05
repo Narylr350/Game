@@ -106,6 +106,9 @@ public class Server {
                 System.out.println("当前阶段没有对应提示类型，流程结束。当前阶段：" + currentRoom.getPhase());
                 return;
             }
+//            MessageType messageType = currentWaitingMessageType;
+
+
 
             // 给当前玩家发提示，并等待他的输入
             Result result = waitPlayerAction(playerId, messageType);
@@ -117,11 +120,13 @@ public class Server {
             System.out.println("收到玩家 " + result.getPlayerId() + " 输入：" + result.getMessage());
 
             // 输入转动作
-            ActionType actionType = ActionType.fromString(parseAction(result.getMessage()));
+            ActionType actionType = parseAction(result.getMessage(),messageType);
             if (actionType == null) {
                 broadcast(result.getPlayerId(), "输入无效");
                 continue;
             }
+            System.out.println("阶段: " + currentRoom.getPhase());
+            System.out.println("当前操作人: " + currentRoom.getCurrentTurnPlayerId());
 
             // 调用外部逻辑
 
@@ -141,11 +146,12 @@ public class Server {
                 broadcast(actionResult.getMessage());
             }
 
-            processingStatus(result,currentRoom);
+//            processingStatus(result,currentRoom);
             // 打印处理后的房间状态，确认有没有切到抢地主
-            System.out.println("处理后阶段: " + result.currentStatus);
+            System.out.println("处理后阶段: " + currentRoom.getPhase());
             System.out.println("处理后当前操作人: " + currentRoom.getCurrentTurnPlayerId());
             System.out.println("处理后地主: " + currentRoom.getLandlordPlayerId());
+            System.out.println("----------");
 
             // 地主已经确定，可以结束当前流程
             if (currentRoom.getLandlordPlayerId() != null) {
@@ -168,9 +174,12 @@ public class Server {
             return null;
         }
 
+
         switch (room.getPhase()) {
             case CALL_LANDLORD:
                 return MessageType.CALL_LANDLORD;
+            case ROB_LANDLORD:
+                return MessageType.ROB_LANDLORD;
             case PLAYING:
                 return MessageType.PLAY_CARD;
             default:
@@ -380,22 +389,32 @@ public class Server {
             return result;
         }
     }
-    private static String parseAction(String input) {
-        if (input == null) {
+    private static ActionType parseAction(String input, MessageType type) {
+        if (input == null || type == null) {
             return null;
         }
 
         input = input.trim();
-        if ("1".equals(input) || "叫".equals(input) || "叫地主".equals(input)) {
-            return "叫";
+
+        switch (type) {
+            case CALL_LANDLORD:
+                if ("1".equals(input) || "叫".equals(input) || "叫地主".equals(input)) {
+                    return ActionType.CALL;
+                }
+                if ("2".equals(input) || "不叫".equals(input)) {
+                    return ActionType.PASS;
+                }
+                break;
+
+            case ROB_LANDLORD:
+                if ("1".equals(input) || "抢".equals(input) || "抢地主".equals(input)) {
+                    return ActionType.CALL;
+                }
+                if ("2".equals(input) || "不抢".equals(input)) {
+                    return ActionType.PASS;
+                }
+                break;
         }
-
-        if ("2".equals(input) || "不叫".equals(input)) {
-            return "不叫";
-        }
-
-
-
 
         return null;
     }
