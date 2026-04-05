@@ -8,14 +8,12 @@ public class PlayerState {
     private final TreeSet<Integer> cards;
     private boolean landlord;
     private boolean online;
-    private int score; //当前抢地主阶段的分值，到2分为地主（抢地主制）
 
     public PlayerState(int playerId, String playerName, TreeSet<Integer> cards) {
         this.playerId = playerId;
         this.playerName = playerName;
         this.cards = new TreeSet<>(cards);
         this.online = true;
-        this.score = 0;
     }
 
     public int getPlayerId() {
@@ -49,14 +47,5 @@ public class PlayerState {
     // 地主确定后，把底牌并入手牌时会用到。
     public void addCards(TreeSet<Integer> extraCards) {
         cards.addAll(extraCards);
-    }
-
-    // 当前先保留最小计分入口，后续再决定抢地主阶段怎么用。
-    public void addScore() {
-        score++;
-    }
-
-    public int getScore() {
-        return score;
     }
 }

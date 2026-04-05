@@ -3,7 +3,7 @@ package game;
 public enum ActionType {
 
     CALL("叫"),
-    NOT_CALLED("不叫");
+    PASS("不叫");
 
     private final String text;
 

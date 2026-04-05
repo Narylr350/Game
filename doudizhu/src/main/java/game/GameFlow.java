@@ -17,11 +17,11 @@ public class GameFlow {
         this.callLanLord = new CallLanLordHandler();
     }
 
-    public ActionResult handlePlayerAction(GameRoom room, ActionType actionType) {
+    public ActionResult handlePlayerAction(GameRoom room,Integer playerId ,ActionType actionType) {
         currentPhase = room.getPhase();
         ActionResult result = null;
         if (currentPhase == GamePhase.CALL_LANDLORD) {
-            result = callLanLord.callLandLordHandler(room, actionType);
+            result = callLanLord.callLandLordHandler(room, playerId ,actionType);
         }
         return result;
     }
@@ -57,9 +57,9 @@ public class GameFlow {
 
     // 服务端当前通过这个入口拿到“已经开局的一局”。
     public GameRoom startRoom(List<String> playerNames) {
-        room.setPhase(GamePhase.DEALING);
         DealResult dealResult = deal(playerNames);
         room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
+        room.setPhase(GamePhase.DEALING);
         room = startCallLandLord(room);
         return room;
     }
@@ -69,14 +69,19 @@ public class GameFlow {
         room.setLandlordId(null);
         room.setLandlordPlayerId(null);
         room.setHighestScore(0);
-        room.setActionCount(0);
+        room.addActionCount();
         room.setCurrentTurnPlayerId(new Random().nextInt(1, 4));
         return room;
     }
 
     //重新发牌
-    public GameRoom reDeal() {
-        return null;
+    public void reDeal(GameRoom room) {
+        DealResult dealResult = deal(collectPlayerNames(room));
+        this.room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
+    }
+
+    public GameRoom getCurrentRoom() {
+        return room;
     }
 
     // 名字校验要兼容中文输入法下的全角空格。
@@ -90,5 +95,13 @@ public class GameFlow {
                 throw new IllegalArgumentException("玩家名称不能为空");
             }
         }
+    }
+
+    private static List<String> collectPlayerNames(GameRoom room) {
+        List<String> playerNames = new ArrayList<>();
+        for (PlayerState player : room.getPlayers()) {
+            playerNames.add(player.getPlayerName());
+        }
+        return playerNames;
     }
 }

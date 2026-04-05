@@ -62,7 +62,7 @@ public class ActionResult {
     }
 
     //需要重开
-    public static ActionResult succelandlordConfirmedss(String message, boolean reDeal) {
+    public static ActionResult successLandlordConfirmed(String message, boolean reDeal) {
         ActionResult result = new ActionResult(
                 true,
                 true,
@@ -90,7 +90,7 @@ public class ActionResult {
     }
 
     //返回不是地主的结果
-    public static ActionResult notLandLord(String message) {
+    public static ActionResult noLandLord(String message) {
         ActionResult result = new ActionResult(
                 true,
                 true,
