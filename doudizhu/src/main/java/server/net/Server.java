@@ -1,10 +1,11 @@
 package server.net;
 
-import game.ActionType;
+import game.action.ActionType;
 import game.GameActionResult;
 import game.GameFlow;
 import game.GameRoom;
-import game.PlayerState;
+import game.action.GameAction;
+import game.state.PlayerState;
 import util.CardUtil;
 
 import java.io.BufferedReader;
@@ -41,7 +42,7 @@ public class Server {
     /**
      * 游戏流程对象
      */
-    private static final GameFlow GAME_FLOW = GameFlow.getInstance();
+    private static final GameFlow GAME_FLOW = new GameFlow();
     /**
      * 主流程等待输入、客户端线程提交输入，用同一把锁同步
      */
@@ -132,7 +133,7 @@ public class Server {
                 return;
             }
 
-            Integer playerId = currentRoom.getCurrentTurnPlayerId();
+            Integer playerId = currentRoom.getCurrentPlayerId();
             if (playerId == null) {
                 System.out.println("当前没有可操作玩家，流程结束");
                 return;
@@ -140,7 +141,7 @@ public class Server {
 
             MessageType messageType = resolveCurrentMessageType(currentRoom);
             if (messageType == null) {
-                System.out.println("当前阶段没有对应提示类型，流程结束。当前阶段：" + currentRoom.getPhase());
+                System.out.println("当前阶段没有对应提示类型，流程结束。当前阶段：" + currentRoom.getCurrentPhase());
                 return;
             }
 //            MessageType messageType = currentWaitingMessageType;
@@ -158,21 +159,22 @@ public class Server {
 
             // 输入转动作
             ActionType actionType = parseAction(result.getMessage(), messageType);
+            GameAction action = new GameAction(
+                    result.getPlayerId(),
+                    actionType,
+                    null
+            );
             if (actionType == null) {
                 broadcast(result.getPlayerId(), "输入无效");
                 continue;
             }
 
-            System.out.println("阶段: " + currentRoom.getPhase());
-            System.out.println("当前操作人: " + currentRoom.getCurrentTurnPlayerId());
+            System.out.println("阶段: " + currentRoom.getCurrentPhase());
+            System.out.println("当前操作人: " + currentRoom.getCurrentPlayerId());
 
             // 调用外部逻辑
 
-            GameActionResult gameActionResult = GAME_FLOW.handlePlayerAction(
-                    currentRoom,
-                    result.getPlayerId(),
-                    actionType
-            );
+            GameActionResult gameActionResult = GAME_FLOW.handlePlayerAction(currentRoom, action);
 
             if (gameActionResult == null) {
                 System.out.println("动作处理返回空，流程结束");
@@ -180,22 +182,22 @@ public class Server {
             }
 
             // 广播外部逻辑返回的消息
-            if (gameActionResult.getDisplayMessage() != null && !gameActionResult.getDisplayMessage()
+            if (gameActionResult.getMessage() != null && !gameActionResult.getMessage()
                     .isEmpty()) {
-                broadcast(gameActionResult.getDisplayMessage());
+                broadcast(gameActionResult.getMessage());
             }
 
 //            processingStatus(result,currentRoom);
             // 打印处理后的房间状态，确认有没有切到抢地主
-            System.out.println(gameActionResult.getDisplayMessage());
-            System.out.println("处理后阶段: " + currentRoom.getPhase());
-            System.out.println("处理后当前操作人: " + currentRoom.getCurrentTurnPlayerId());
-            System.out.println("处理后地主: " + currentRoom.getLandLordPlayerId());
+            System.out.println(gameActionResult.getMessage());
+            System.out.println("处理后阶段: " + currentRoom.getCurrentPhase());
+            System.out.println("处理后当前操作人: " + currentRoom.getCurrentPlayerId());
+            System.out.println("处理后地主: " + currentRoom.getLandlordPlayerId());
             System.out.println("----------");
 
             // 地主已经确定，可以结束当前流程
-            if (currentRoom.getLandLordPlayerId() != null) {
-                broadcast("地主已确定: 玩家 " + currentRoom.getLandLordPlayerId());
+            if (currentRoom.getLandlordPlayerId() != null) {
+                broadcast("地主已确定: 玩家 " + currentRoom.getLandlordPlayerId());
                 sendOpeningHands(currentRoom);
                 System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
                 return;
@@ -210,7 +212,7 @@ public class Server {
             }
 
             // 不 return，不 break，继续 while
-            // 下一轮会重新读取 currentRoom.getPhase()
+            // 下一轮会重新读取 currentRoom.getCurrentPhase()
             // 如果外部逻辑已改成 ROB_LANDLORD，就会自动给下一位发“抢地主”
         }
     }
@@ -223,12 +225,12 @@ public class Server {
      * @return 对应的消息类型,如果无法映射则返回null
      */
     private static MessageType resolveCurrentMessageType(GameRoom room) {
-        if (room == null || room.getPhase() == null) {
+        if (room == null || room.getCurrentPhase() == null) {
             return null;
         }
 
 
-        switch (room.getPhase()) {
+        switch (room.getCurrentPhase()) {
             case CALL_LANDLORD:
                 return MessageType.CALL_LANDLORD;
             case ROB_LANDLORD:
@@ -288,7 +290,7 @@ public class Server {
      */
     private static void sendOpeningHands(GameRoom room) {
         for (PlayerConnection connection : PLAYERS) {
-            PlayerState playerState = room.findPlayerById(connection.getPlayerId());
+            PlayerState playerState = room.getPlayerById(connection.getPlayerId());
             if (playerState == null) {
                 continue;
             }

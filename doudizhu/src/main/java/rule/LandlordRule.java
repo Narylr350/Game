@@ -2,7 +2,7 @@ package rule;
 
 import game.GamePhase;
 import game.GameRoom;
-import game.PlayerState;
+import game.state.PlayerState;
 
 /**
  * 地主规则类。
@@ -32,7 +32,7 @@ public class LandlordRule {
             return false;
         }
         //当前阶段必须是地主阶段
-        if (room.getPhase() != GamePhase.CALL_LANDLORD && room.getPhase() != GamePhase.ROB_LANDLORD) {//@Rainbwo
+        if (room.getCurrentPhase() != GamePhase.CALL_LANDLORD && room.getCurrentPhase() != GamePhase.ROB_LANDLORD) {//@Rainbwo
             return false;
         }
         //玩家不能为空

@@ -1,4 +1,4 @@
-package game;
+package game.action;
 
 public enum ActionType {
 

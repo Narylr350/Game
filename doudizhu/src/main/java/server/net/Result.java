@@ -36,8 +36,8 @@ public class Result {
      * @param playerId 当前操作的玩家ID
      * @param msg 消息内容
      */
-    public Result(int playerId, String msg) {
-    }
+    /*public Result(int playerId, String msg) {
+    }*/
 
     /**
      * 获取消息内容。
@@ -84,11 +84,6 @@ public class Result {
         this.currentID = currentID;
     }
 
-    /**
-     * 设置当前游戏阶段的消息类型。
-     *
-     * @param currentStatus 消息类型枚举
-     */
     public void setCurrentStatus(MessageType currentStatus) {
         this.currentStatus = currentStatus;
     }

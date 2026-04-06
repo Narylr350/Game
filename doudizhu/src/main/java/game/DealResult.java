@@ -1,5 +1,7 @@
 package game;
 
+import game.state.PlayerState;
+
 import java.util.List;
 import java.util.TreeSet;
 
@@ -20,7 +22,7 @@ public class DealResult {
      * @param players 所有玩家的状态列表
      * @param holeCards 底牌集合
      */
-    protected DealResult(List<PlayerState> players, TreeSet<Integer> holeCards) {
+    public DealResult(List<PlayerState> players, TreeSet<Integer> holeCards) {
         this.players = List.copyOf(players);
         this.holeCards = new TreeSet<>(holeCards);
     }
@@ -30,7 +32,7 @@ public class DealResult {
      *
      * @return 包含所有玩家状态的不可变列表
      */
-    protected List<PlayerState> getPlayers() {
+    public List<PlayerState> getPlayers() {
         return players;
     }
 
@@ -39,7 +41,7 @@ public class DealResult {
      *
      * @return 底牌集合的副本(已排序)
      */
-    protected TreeSet<Integer> getHoleCards() {
+    public TreeSet<Integer> getHoleCards() {
         return new TreeSet<>(holeCards);
     }
 }

@@ -1,49 +1,52 @@
 package game.handler;
 
-import game.ActionType;
 import game.GameActionResult;
 import game.GamePhase;
 import game.GameRoom;
-import game.PlayerState;
+import game.action.ActionType;
+import game.state.PlayerState;
 
 import java.util.List;
 
 public class RobLandLordHandler {
-    public GameActionResult robLandLordHandler(GameRoom room, Integer playerId, ActionType actionType) {
+
+    public GameActionResult handle(GameRoom room, Integer playerId, ActionType actionType) {
         if (actionType == null) {
             return GameActionResult.invalidAction("你在干赣神魔", playerId);
         }
-        Integer currentTurnPlayerId = room.getCurrentTurnPlayerId();
-        if (!currentTurnPlayerId.equals(playerId)) {
+
+        Integer currentPlayerId = room.getCurrentPlayerId();
+        if (currentPlayerId == null || !currentPlayerId.equals(playerId)) {
             return GameActionResult.invalidAction("是你吗你就叫", playerId);
         }
-        List<Integer> passPlayerId = room.getPassPlayerId();
-        if (passPlayerId.contains(currentTurnPlayerId)) {
+
+        List<Integer> callPassPlayerIds = room.getCallPassPlayerIds();
+        if (callPassPlayerIds.contains(currentPlayerId)) {
             actionType = ActionType.PASS;
         }
 
-        //抢地主
         if (ActionType.CALL == actionType) {
-            //下一个
-            room.setCurrentTurnPlayerId(nextPlayerId(currentTurnPlayerId));
-            //将该玩家设置为地主候选人
-            room.setLandLordCandidateId(currentTurnPlayerId);
-        }
-        //不抢
-        if (ActionType.PASS == actionType) {
-            //下一个
-            room.setCurrentTurnPlayerId(nextPlayerId(currentTurnPlayerId));
-        }
-        //判断是不是地主
-        if (currentTurnPlayerId.equals(room.getFirstCallerId())) {
-            room.setPhase(GamePhase.PLAYING);
-            room.setLandLordId(room.getLandLordCandidateId());
-            PlayerState player = room.findPlayerById(room.getLandLordPlayerId());
-            player.addCards(room.getHoleCards());
-            return GameActionResult.landLordDecided("抢地主成功", room.getLandLordCandidateId());
+            room.setCurrentPlayerId(nextPlayerId(currentPlayerId));
+            room.setLandlordCandidateId(currentPlayerId);
+        } else if (ActionType.PASS == actionType) {
+            room.setCurrentPlayerId(nextPlayerId(currentPlayerId));
+        } else {
+            return GameActionResult.invalidAction("当前操作无效", playerId);
         }
 
-        return GameActionResult.actionAccepted("操作成功", currentTurnPlayerId, room.getCurrentTurnPlayerId());
+        if (currentPlayerId.equals(room.getFirstCallerId())) {
+            room.setCurrentPhase(GamePhase.PLAYING);
+            room.setLandlordPlayerId(room.getLandlordCandidateId());
+
+            PlayerState player = room.getPlayerById(room.getLandlordPlayerId());
+            if (player != null) {
+                player.addCards(room.getHoleCards());
+            }
+
+            return GameActionResult.landlordDecided("抢地主成功", room.getLandlordCandidateId());
+        }
+
+        return GameActionResult.actionAccepted("操作成功", room.getCurrentPlayerId());
     }
 
     private Integer nextPlayerId(Integer currentPlayerId) {

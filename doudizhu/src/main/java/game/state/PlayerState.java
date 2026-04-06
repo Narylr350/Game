@@ -1,4 +1,4 @@
-package game;
+package game.state;
 
 import java.util.TreeSet;
 
