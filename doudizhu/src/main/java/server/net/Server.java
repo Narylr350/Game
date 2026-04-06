@@ -16,11 +16,21 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-// 当前服务端入口：
-// 1. 接收客户端连接
-// 2. 创建房间并发牌
-// 3. 等待当前玩家输入
-// 4. 把输入交给外部已写好的逻辑处理
+/**
+ * 斗地主游戏服务端入口类。
+ * <p>
+ * 负责管理整个服务端的生命周期,包括:
+ * <ul>
+ *   <li>接收客户端连接</li>
+ *   <li>创建游戏房间并发牌</li>
+ *   <li>驱动游戏流程(叫地主/抢地主/出牌)</li>
+ *   <li>处理玩家输入并广播结果</li>
+ * </ul>
+ * </p>
+ * <p>
+ * 当前实现为控制台版本,通过命令行输入输出进行游戏。
+ * </p>
+ */
 public class Server {
 
     /**
@@ -53,6 +63,15 @@ public class Server {
      */
     private static volatile MessageType currentWaitingMessageType = null;
 
+    /**
+     * 服务端主方法。
+     * <p>
+     * 启动服务端并等待3个客户端连接,连接完成后自动开始游戏流程。
+     * 游戏在端口8888上监听。
+     * </p>
+     *
+     * @param args 命令行参数(未使用)
+     */
     public static void main(String[] args) {
         final int port = 8888;
         final int playerCount = 3;
@@ -199,6 +218,9 @@ public class Server {
     /**
      * 根据房间当前阶段，决定本轮该给玩家发什么提示。
      * 这里只做阶段到消息类型的映射，不写业务规则。
+     *
+     * @param room 游戏房间对象
+     * @return 对应的消息类型,如果无法映射则返回null
      */
     private static MessageType resolveCurrentMessageType(GameRoom room) {
         if (room == null || room.getPhase() == null) {
@@ -220,6 +242,10 @@ public class Server {
 
     /**
      * 接收客户端连接，并创建 PlayerConnection 放进集合。
+     *
+     * @param serverSocket 服务端Socket
+     * @param playerCount 需要接收的玩家数量
+     * @throws IOException 如果接收连接时发生IO错误
      */
     private static void acceptPlayers(ServerSocket serverSocket, int playerCount) throws IOException {
         while (PLAYERS.size() < playerCount) {
@@ -244,6 +270,8 @@ public class Server {
 
     /**
      * 收集玩家名称，用于开局创建房间。
+     *
+     * @return 包含所有已连接玩家名称的列表
      */
     private static List<String> collectPlayerNames() {
         List<String> playerNames = new ArrayList<>();
@@ -255,6 +283,8 @@ public class Server {
 
     /**
      * 按连接编号找到对应玩家，把各自手牌发回客户端。
+     *
+     * @param room 游戏房间对象,包含玩家手牌信息
      */
     private static void sendOpeningHands(GameRoom room) {
         for (PlayerConnection connection : PLAYERS) {
@@ -269,6 +299,8 @@ public class Server {
     /**
      * 监听某个客户端发来的消息。
      * 这里只负责收输入，不做游戏规则判断。
+     *
+     * @param player 要监听的玩家连接对象
      */
     private static void handleClient(PlayerConnection player) {
         try {
@@ -329,6 +361,8 @@ public class Server {
 
     /**
      * 给所有玩家广播消息。
+     *
+     * @param msg 要广播的消息内容
      */
     private static void broadcast(String msg) {
         for (PlayerConnection player : PLAYERS) {
@@ -338,6 +372,9 @@ public class Server {
 
     /**
      * 给除自己以外的玩家广播消息。
+     *
+     * @param msg 要广播的消息内容
+     * @param id 发送者玩家ID(不会收到此消息)
      */
     private static void broadcast(String msg, int id) {
         for (PlayerConnection player : PLAYERS) {
@@ -349,6 +386,9 @@ public class Server {
 
     /**
      * 给指定ID的玩家发消息。
+     *
+     * @param id 接收消息的玩家ID
+     * @param msg 要发送的消息内容
      */
     private static void broadcast(int id, String msg) {
         for (PlayerConnection player : PLAYERS) {
@@ -361,6 +401,9 @@ public class Server {
 
     /**
      * 根据消息类型，返回给客户端的提示文本。
+     *
+     * @param type 消息类型枚举
+     * @return 对应的提示文本
      */
     public static String getMessage(MessageType type) {
         switch (type) {
@@ -384,6 +427,10 @@ public class Server {
      * 2. 发提示消息
      * 3. 阻塞等待该玩家输入
      * 4. 返回输入结果
+     *
+     * @param playerId 等待输入的玩家ID
+     * @param type 当前等待的消息类型
+     * @return 玩家输入的结果对象,如果等待失败则返回null
      */
     public static Result waitPlayerAction(int playerId, MessageType type) {
         synchronized (ACTION_LOCK) {
@@ -423,6 +470,13 @@ public class Server {
         }
     }
 
+    /**
+     * 将玩家输入的字符串解析为对应的操作类型。
+     *
+     * @param input 玩家输入的字符串
+     * @param type 当前阶段的消息类型
+     * @return 解析后的操作类型,如果输入无效则返回null
+     */
     private static ActionType parseAction(String input, MessageType type) {
         if (input == null || type == null) {
             return null;
@@ -452,7 +506,13 @@ public class Server {
 
         return null;
     }
-    //清空控制台
+
+    /**
+     * 清空控制台。
+     * <p>
+     * 使用系统命令cls来清空控制台输出(仅Windows系统)。
+     * </p>
+     */
     public static void clearConsole() {
         try {
             new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();

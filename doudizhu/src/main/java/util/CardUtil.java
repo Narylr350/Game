@@ -39,13 +39,32 @@ public final class CardUtil {
     private CardUtil() {
     }
 
+    /**
+     * 创建一副已洗牌的牌堆。
+     * <p>
+     * 该方法基于预定义的牌堆模板(54张牌)创建一个新牌堆,并对其进行随机洗牌。
+     * 每次调用都会返回一个独立的、随机排序的牌堆实例。
+     * </p>
+     *
+     * @return 包含1-54的整数列表,表示已洗牌的牌堆,每张牌用唯一ID表示
+     */
     public static List<Integer> createShuffledDeck() {
         List<Integer> deck = new ArrayList<>(DECK_TEMPLATE);
         Collections.shuffle(deck);
         return deck;
     }
 
-    // 这里显式校验非法牌号，避免坏数据沿着主流程一路传下去。
+    /**
+     * 将牌ID集合转换为可读的牌面字符串。
+     * <p>
+     * 该方法将内部的牌ID(1-54)转换为对应的牌面显示文本(如"3⬛️ 4♣️ 大王")。
+     * 会对输入进行严格校验,拒绝null值、空集合中的null元素以及未知的牌ID。
+     * </p>
+     *
+     * @param cardIds 牌ID集合,每个ID必须在1-54范围内且不能为null
+     * @return 用空格分隔的牌面显示字符串
+     * @throws IllegalArgumentException 如果cardIds为null,或包含null元素,或包含未知的牌ID
+     */
     public static String cardsToString(Collection<Integer> cardIds) {
         if (cardIds == null) {
             throw new IllegalArgumentException("cardIds 不能为空");
