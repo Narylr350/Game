@@ -1,7 +1,7 @@
 package game.handler;
 
-import game.GameActionResult;
 import game.ActionType;
+import game.GameActionResult;
 import game.GamePhase;
 import game.GameRoom;
 import rule.LandlordRule;

@@ -13,16 +13,21 @@ public class Result {
     MessageType currentStatus;//阶段枚举
 
 
-    public Result(int playerId, String msg,MessageType currentStatus) {
-        this.currentID =playerId;
+    public Result(int playerId, String msg, MessageType currentStatus) {
+        this.currentID = playerId;
         this.message = msg;
         this.currentStatus = currentStatus;
     }
+
     public Result(int playerId, String msg) {
     }
 
     public String getMessage() {
         return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public Integer getPlayerId() {
@@ -35,10 +40,6 @@ public class Result {
 
     public void setCurrentID(Integer currentID) {
         this.currentID = currentID;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     public void setCurrentStatus(MessageType currentStatus) {

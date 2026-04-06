@@ -42,6 +42,7 @@ public class GameActionResult {
                 null
         );
     }
+
     public static GameActionResult actionAccepted(String message, Integer currentPlayerId, Integer nextPlayerId) {
         return new GameActionResult(
                 true,
@@ -53,6 +54,19 @@ public class GameActionResult {
                 null
         );
     }
+
+    public static GameActionResult actionAccepted(String message) {
+        return new GameActionResult(
+                true,
+                false,
+                message,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
     public static GameActionResult redeal(String message) {
         return new GameActionResult(
                 true,
@@ -64,6 +78,7 @@ public class GameActionResult {
                 GamePhase.DEALING
         );
     }
+
     public static GameActionResult landLordDecided(String message, Integer landlordId) {
         return new GameActionResult(
                 true,

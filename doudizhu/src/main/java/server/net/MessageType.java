@@ -1,7 +1,6 @@
 package server.net;
 
 
-
 public enum MessageType {
     DEAL_CARDS,     // 发牌
     CALL_LANDLORD,  // 叫地主阶段

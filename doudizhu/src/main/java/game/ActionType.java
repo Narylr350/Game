@@ -11,10 +11,6 @@ public enum ActionType {
         this.text = text;
     }
 
-    public String getText() {
-        return text;
-    }
-
     public static ActionType fromString(String input) {
         if (input == null) {
             return null;
@@ -29,7 +25,10 @@ public enum ActionType {
         }
 
 
-
         return null; // 表示非法输入
+    }
+
+    public String getText() {
+        return text;
     }
 }

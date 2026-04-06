@@ -1,7 +1,7 @@
 package game.handler;
 
-import game.GameActionResult;
 import game.ActionType;
+import game.GameActionResult;
 import game.GamePhase;
 import game.GameRoom;
 
@@ -29,7 +29,7 @@ public class RobLandLordHandler {
             room.setLandLordCandidateId(currentTurnPlayerId);
         }
         //不抢
-        if (ActionType.PASS == actionType){
+        if (ActionType.PASS == actionType) {
             //下一个
             room.setCurrentTurnPlayerId(nextPlayerId(currentTurnPlayerId));
         }

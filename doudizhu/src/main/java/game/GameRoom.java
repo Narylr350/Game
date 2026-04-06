@@ -28,6 +28,10 @@ public class GameRoom {
         return phase;
     }
 
+    public void setPhase(GamePhase phase) {
+        this.phase = phase;
+    }
+
     // 查询所有玩家
     public List<PlayerState> getPlayers() {
         return Collections.unmodifiableList(players);
@@ -57,10 +61,6 @@ public class GameRoom {
 
     public void addPassCount() {
         passCount++;
-    }
-
-    public void setPhase(GamePhase phase) {
-        this.phase = phase;
     }
 
     public TreeSet<Integer> getHoleCards() {

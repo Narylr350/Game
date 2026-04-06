@@ -1,6 +1,10 @@
 package server.net;
 
-import game.*;
+import game.ActionType;
+import game.GameActionResult;
+import game.GameFlow;
+import game.GameRoom;
+import game.PlayerState;
 import util.CardUtil;
 
 import java.io.BufferedReader;
@@ -19,26 +23,35 @@ import java.util.List;
 // 4. 把输入交给外部已写好的逻辑处理
 public class Server {
 
-    /** 已连接的玩家集合 */
+    /**
+     * 已连接的玩家集合
+     */
     private static final List<PlayerConnection> PLAYERS = new ArrayList<>();
 
-    /** 游戏流程对象 */
+    /**
+     * 游戏流程对象
+     */
     private static final GameFlow GAME_FLOW = GameFlow.getInstance();
-
-    /** 当前房间 */
-    private static GameRoom currentRoom;
-
-    /** 当前轮到操作的玩家ID，-1表示当前没有等待任何玩家输入 */
-    private static volatile int currentPlayerId = -1;
-
-    /** 当前等待到的玩家输入结果 */
-    private static volatile Result pendingResult = null;
-
-    /** 当前正在等待的消息类型：叫地主 / 抢地主 / 出牌 */
-    private static volatile MessageType currentWaitingMessageType = null;
-
-    /** 主流程等待输入、客户端线程提交输入，用同一把锁同步 */
+    /**
+     * 主流程等待输入、客户端线程提交输入，用同一把锁同步
+     */
     private static final Object ACTION_LOCK = new Object();
+    /**
+     * 当前房间
+     */
+    private static GameRoom currentRoom;
+    /**
+     * 当前轮到操作的玩家ID，-1表示当前没有等待任何玩家输入
+     */
+    private static volatile int currentPlayerId = -1;
+    /**
+     * 当前等待到的玩家输入结果
+     */
+    private static volatile Result pendingResult = null;
+    /**
+     * 当前正在等待的消息类型：叫地主 / 抢地主 / 出牌
+     */
+    private static volatile MessageType currentWaitingMessageType = null;
 
     public static void main(String[] args) {
         final int port = 8888;
@@ -84,7 +97,7 @@ public class Server {
 
     /**
      * 主流程驱动入口。
-     *
+     * <p>
      * 这里只做“流程调度”，不写规则判断。
      * 具体的叫地主 / 抢地主 / 出牌 / 结算逻辑，都预留给外部逻辑层处理。
      */
@@ -114,7 +127,6 @@ public class Server {
 //            MessageType messageType = currentWaitingMessageType;
 
 
-
             // 给当前玩家发提示，并等待他的输入
             Result result = waitPlayerAction(playerId, messageType);
             if (result == null) {
@@ -126,7 +138,7 @@ public class Server {
             System.out.println("收到玩家 " + result.getPlayerId() + " 输入：" + result.getMessage());
 
             // 输入转动作
-            ActionType actionType = parseAction(result.getMessage(),messageType);
+            ActionType actionType = parseAction(result.getMessage(), messageType);
             if (actionType == null) {
                 broadcast(result.getPlayerId(), "输入无效");
                 continue;
@@ -149,7 +161,8 @@ public class Server {
             }
 
             // 广播外部逻辑返回的消息
-            if (gameActionResult.getDisplayMessage() != null && !gameActionResult.getDisplayMessage().isEmpty()) {
+            if (gameActionResult.getDisplayMessage() != null && !gameActionResult.getDisplayMessage()
+                    .isEmpty()) {
                 broadcast(gameActionResult.getDisplayMessage());
             }
 
@@ -261,7 +274,8 @@ public class Server {
             System.out.println("开始处理客户端 " + player.getPlayerId());
 
             String msg;
-            while ((msg = player.getReader().readLine()) != null) {
+            while ((msg = player.getReader()
+                    .readLine()) != null) {
                 msg = msg.trim();
                 System.out.println("收到玩家 " + player.getPlayerId() + " 输入：" + msg);
 
@@ -324,7 +338,7 @@ public class Server {
     /**
      * 给除自己以外的玩家广播消息。
      */
-    private static void broadcast(String msg,int id) {
+    private static void broadcast(String msg, int id) {
         for (PlayerConnection player : PLAYERS) {
             if (player.getPlayerId() != id) {
                 player.send(msg);
@@ -392,7 +406,8 @@ public class Server {
                 try {
                     ACTION_LOCK.wait();
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    Thread.currentThread()
+                            .interrupt();
                     return null;
                 }
             }
@@ -406,6 +421,7 @@ public class Server {
             return result;
         }
     }
+
     private static ActionType parseAction(String input, MessageType type) {
         if (input == null || type == null) {
             return null;
