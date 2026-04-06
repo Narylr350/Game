@@ -177,6 +177,8 @@ public class Server {
             // 地主已经确定，可以结束当前流程
             if (currentRoom.getLandLordPlayerId() != null) {
                 broadcast("地主已确定: 玩家 " + currentRoom.getLandLordPlayerId());
+                sendOpeningHands(currentRoom);
+                System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
                 return;
             }
 
@@ -184,7 +186,6 @@ public class Server {
             if (gameActionResult.isNeedRedeal()){
                 currentRoom = GAME_FLOW.reDeal(currentRoom);
                 sendOpeningHands(currentRoom);
-                clearConsole();
                 System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
 
             }
