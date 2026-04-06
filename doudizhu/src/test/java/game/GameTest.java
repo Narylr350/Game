@@ -8,8 +8,7 @@ public class GameTest {
     @Test
     public void playerWhoPassedInCallStageCannotRobLater() {
         GameFlow gameFlow = GameFlow.getInstance();
-        gameFlow.startRoom(List.of("1", "2", "3"));
-        GameRoom room = gameFlow.getCurrentRoom();
+        GameRoom room = gameFlow.startRoom(List.of("1", "2", "3"));
 
         // 1 号玩家：不叫
         Integer player1 = room.getCurrentTurnPlayerId();

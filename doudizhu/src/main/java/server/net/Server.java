@@ -130,20 +130,20 @@ public class Server {
 
             // 调用外部逻辑
 
-            GameActionResult actionResult = GAME_FLOW.handlePlayerAction(
+            GameActionResult gameActionResult = GAME_FLOW.handlePlayerAction(
                     currentRoom,
                     result.getPlayerId(),
                     actionType
             );
 
-            if (actionResult == null) {
+            if (gameActionResult == null) {
                 System.out.println("动作处理返回空，流程结束");
                 return;
             }
 
             // 广播外部逻辑返回的消息
-            if (actionResult.getDisplayMessage() != null && !actionResult.getDisplayMessage().isEmpty()) {
-                broadcast(actionResult.getDisplayMessage());
+            if (gameActionResult.getDisplayMessage() != null && !gameActionResult.getDisplayMessage().isEmpty()) {
+                broadcast(gameActionResult.getDisplayMessage());
             }
 
 //            processingStatus(result,currentRoom);

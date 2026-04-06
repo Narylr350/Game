@@ -6,11 +6,10 @@ import util.CardUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.TreeSet;
 
 public class GameFlow {
-    private GameRoom room;
-    private GamePhase currentPhase;
     private CallLanLordHandler callLanLord;
     private RobLandLordHandler robLandLord;
     //单例模式
@@ -27,17 +26,67 @@ public class GameFlow {
 
     //动作处理
     public GameActionResult handlePlayerAction(GameRoom room, Integer playerId, ActionType actionType) {
-        currentPhase = room.getPhase();
+        GamePhase currentPhase = room.getPhase();
         GameActionResult result = null;
-        if (currentPhase == GamePhase.CALL_LANDLORD) {
+        if (currentPhase == GamePhase.DEALING) {
+            return GameActionResult.redeal("开始重新发牌");
+        }
+        if (currentPhase == GamePhase.CALL_LANDLORD){
             result = callLanLord.callLandLordHandler(room, playerId, actionType);
-        }
-        if (currentPhase == GamePhase.ROB_LANDLORD) {
+        }else if (currentPhase == GamePhase.ROB_LANDLORD){
             result = robLandLord.robLandLordHandler(room, playerId, actionType);
-        }
-        if (currentPhase == GamePhase.PLAYING) {
+        }else if (currentPhase == GamePhase.PLAYING){
+
+        }else {
+            return GameActionResult.invalidAction("当前阶段禁止操作");
         }
         return result;
+    }
+
+
+    // 服务端当前通过这个入口拿到“已经开局的一局”。
+    public GameRoom startRoom(List<String> playerNames) {
+        DealResult dealResult = deal(playerNames);
+        GameRoom room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
+        room.setPhase(GamePhase.DEALING);
+        room = startCallLandLord(room);
+        return room;
+    }
+
+    public GameRoom startCallLandLord(GameRoom room) {
+        room.setPhase(GamePhase.CALL_LANDLORD);
+        room.setLandLordId(null);
+        room.setCurrentTurnPlayerId(new Random().nextInt(1, 4));
+        return room;
+    }
+
+    //重新发牌
+    public GameRoom reDeal(GameRoom oldRoom) {
+        DealResult dealResult = deal(collectPlayerNames(oldRoom));
+        GameRoom newRoom  = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
+        newRoom = startCallLandLord(newRoom);
+        return newRoom;
+    }
+
+    // 名字校验要兼容中文输入法下的全角空格。
+    private void validatePlayerNames(List<String> playerNames) {
+        if (playerNames == null || playerNames.size() != 3) {
+            throw new IllegalArgumentException("需要且仅需要3个玩家名称");
+        }
+
+        for (String playerName : playerNames) {
+            if (playerName == null || playerName.isBlank()) {
+                throw new IllegalArgumentException("玩家名称不能为空");
+            }
+        }
+    }
+
+    private static List<String> collectPlayerNames(GameRoom room) {
+        List<String> playerNames = new ArrayList<>();
+        for (PlayerState player : room.getPlayers()) {
+            playerNames.add(player.getPlayerName());
+        }
+        return playerNames;
     }
 
     // 开局发牌。
@@ -67,54 +116,5 @@ public class GameFlow {
         }
 
         return new DealResult(players, holeCards);
-    }
-
-    // 服务端当前通过这个入口拿到“已经开局的一局”。
-    public GameRoom startRoom(List<String> playerNames) {
-        DealResult dealResult = deal(playerNames);
-        room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
-        room.setPhase(GamePhase.DEALING);
-        room = startCallLandLord(room);
-        return room;
-    }
-
-    public GameRoom startCallLandLord(GameRoom room) {
-        room.setPhase(GamePhase.CALL_LANDLORD);
-        room.setLandLordId(null);
-        room.setCurrentTurnPlayerId(1);//new Random().nextInt(1, 4)
-        return room;
-    }
-
-    //重新发牌
-    public void reDeal(GameRoom room) {
-        if (room.getPhase() != GamePhase.CALL_LANDLORD) {
-            DealResult dealResult = deal(collectPlayerNames(room));
-            this.room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
-        }
-    }
-
-    public GameRoom getCurrentRoom() {
-        return room;
-    }
-
-    // 名字校验要兼容中文输入法下的全角空格。
-    private void validatePlayerNames(List<String> playerNames) {
-        if (playerNames == null || playerNames.size() != 3) {
-            throw new IllegalArgumentException("需要且仅需要3个玩家名称");
-        }
-
-        for (String playerName : playerNames) {
-            if (playerName == null || playerName.isBlank()) {
-                throw new IllegalArgumentException("玩家名称不能为空");
-            }
-        }
-    }
-
-    private static List<String> collectPlayerNames(GameRoom room) {
-        List<String> playerNames = new ArrayList<>();
-        for (PlayerState player : room.getPlayers()) {
-            playerNames.add(player.getPlayerName());
-        }
-        return playerNames;
     }
 }
