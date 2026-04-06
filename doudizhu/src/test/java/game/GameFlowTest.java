@@ -17,7 +17,7 @@ class GameFlowTest {
 
     @Test
     void startRoomDealsSeventeenCardsToEachPlayerAndThreeHoleCards() {
-        GameFlow gameFlow = new GameFlow();
+        GameFlow gameFlow = GameFlow.getInstance();
 
         GameRoom room = gameFlow.startRoom(List.of("A", "B", "C"));
 
@@ -35,7 +35,7 @@ class GameFlowTest {
 
     @Test
     void startRoomRejectsBlankNames() {
-        GameFlow gameFlow = new GameFlow();
+        GameFlow gameFlow = GameFlow.getInstance();
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -45,7 +45,7 @@ class GameFlowTest {
 
     @Test
     void startRoomRejectsFullWidthSpaceNames() {
-        GameFlow gameFlow = new GameFlow();
+        GameFlow gameFlow = GameFlow.getInstance();
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -55,27 +55,27 @@ class GameFlowTest {
 
     @Test
     void startRoomInitializesLifecycleState() {
-        GameFlow gameFlow = new GameFlow();
+        GameFlow gameFlow = GameFlow.getInstance();
 
         GameRoom room = gameFlow.startRoom(List.of("A", "B", "C"));
 
-        assertNull(room.getLandlordPlayerId());
+        assertNull(room.getLandLordPlayerId());
         assertNull(room.getCurrentTurnPlayerId());
     }
 
     @Test
     void roomCanTrackTurnLandlordAndReceiveHoleCards() {
-        GameFlow gameFlow = new GameFlow();
+        GameFlow gameFlow = GameFlow.getInstance();
 
         GameRoom room = gameFlow.startRoom(List.of("A", "B", "C"));
         PlayerState landlord = room.getPlayers().get(0);
 
         room.setCurrentTurnPlayerId(landlord.getPlayerId());
-        room.setLandlordId(landlord.getPlayerId());
+        room.setLandLordId(landlord.getPlayerId());
         landlord.addCards(room.getHoleCards());
 
         assertEquals(landlord.getPlayerId(), room.getCurrentTurnPlayerId());
-        assertEquals(landlord.getPlayerId(), room.getLandlordPlayerId());
+        assertEquals(landlord.getPlayerId(), room.getLandLordPlayerId());
         assertTrue(landlord.isLandlord());
         assertEquals(20, landlord.getCards().size());
         assertTrue(landlord.getCards()
@@ -84,14 +84,14 @@ class GameFlowTest {
 
     @Test
     void setLandlordNullClearsLandlordStateWithoutThrowing() {
-        GameFlow gameFlow = new GameFlow();
+        GameFlow gameFlow = GameFlow.getInstance();
 
         GameRoom room = gameFlow.startRoom(List.of("A", "B", "C"));
-        room.setLandlordId(room.getPlayers().get(0).getPlayerId());
+        room.setLandLordId(room.getPlayers().get(0).getPlayerId());
 
-        room.setLandlordId(null);
+        room.setLandLordId(null);
 
-        assertNull(room.getLandlordPlayerId());
+        assertNull(room.getLandLordPlayerId());
         for (PlayerState player : room.getPlayers()) {
             assertFalse(player.isLandlord());
         }
@@ -99,7 +99,7 @@ class GameFlowTest {
 
     @Test
     void findPlayerByIdReturnsExistingPlayer() {
-        GameFlow gameFlow = new GameFlow();
+        GameFlow gameFlow = GameFlow.getInstance();
 
         GameRoom room = gameFlow.startRoom(List.of("A", "B", "C"));
 

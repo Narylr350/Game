@@ -1,27 +1,41 @@
 package game;
 
 import game.handler.CallLanLordHandler;
+import game.handler.RobLandLordHandler;
 import util.CardUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.TreeSet;
 
 public class GameFlow {
     private GameRoom room;
     private GamePhase currentPhase;
     private CallLanLordHandler callLanLord;
+    private RobLandLordHandler robLandLord;
+    //单例模式
+    private static GameFlow gameFlow = new GameFlow();
 
-    public GameFlow() {
+    private GameFlow() {
         this.callLanLord = new CallLanLordHandler();
+        this.robLandLord = new RobLandLordHandler();
     }
 
-    public ActionResult handlePlayerAction(GameRoom room,Integer playerId ,ActionType actionType) {
+    public static GameFlow getInstance() {
+        return gameFlow;
+    }
+
+    //动作处理
+    public GameActionResult handlePlayerAction(GameRoom room, Integer playerId, ActionType actionType) {
         currentPhase = room.getPhase();
-        ActionResult result = null;
-        if (currentPhase == GamePhase.CALL_LANDLORD || currentPhase == GamePhase.ROB_LANDLORD) {
-            result = callLanLord.callLandLordHandler(room, playerId ,actionType);
+        GameActionResult result = null;
+        if (currentPhase == GamePhase.CALL_LANDLORD) {
+            result = callLanLord.callLandLordHandler(room, playerId, actionType);
+        }
+        if (currentPhase == GamePhase.ROB_LANDLORD) {
+            result = robLandLord.robLandLordHandler(room, playerId, actionType);
+        }
+        if (currentPhase == GamePhase.PLAYING) {
         }
         return result;
     }
@@ -66,17 +80,14 @@ public class GameFlow {
 
     public GameRoom startCallLandLord(GameRoom room) {
         room.setPhase(GamePhase.CALL_LANDLORD);
-        room.setLandlordId(null);
-        room.setLandlordPlayerId(null);
-        room.setHighestScore(0);
-        room.addActionCount();
-        room.setCurrentTurnPlayerId(new Random().nextInt(1, 4));
+        room.setLandLordId(null);
+        room.setCurrentTurnPlayerId(1);//new Random().nextInt(1, 4)
         return room;
     }
 
     //重新发牌
     public void reDeal(GameRoom room) {
-        if (room.getPhase() != GamePhase.CALL_LANDLORD){
+        if (room.getPhase() != GamePhase.CALL_LANDLORD) {
             DealResult dealResult = deal(collectPlayerNames(room));
             this.room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
         }

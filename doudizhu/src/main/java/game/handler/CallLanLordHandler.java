@@ -1,86 +1,53 @@
 package game.handler;
 
-import game.ActionResult;
+import game.GameActionResult;
 import game.ActionType;
 import game.GamePhase;
 import game.GameRoom;
 import rule.LandlordRule;
 
 public class CallLanLordHandler {
-    public ActionResult callLandLordHandler(GameRoom room, int playerId, ActionType actionType) {
-        if (actionType == null) {
-            return ActionResult.fail("你在干赣神魔");
-        }
-        if (room == null) {
-            return ActionResult.fail("房间不能为空");
-        }
+    public GameActionResult callLandLordHandler(GameRoom room, int playerId, ActionType actionType) {
         if (!LandlordRule.canCallLandlord(room)) {
-            return ActionResult.fail("不能叫地主");
+            return GameActionResult.invalidAction("不能叫地主");
+        }
+        if (actionType == null) {
+            return GameActionResult.invalidAction("你在干赣神魔", playerId);
         }
         int currentTurnPlayerId = room.getCurrentTurnPlayerId();
         if (currentTurnPlayerId != playerId) {
-            return ActionResult.fail("是你吗你就叫");
+            return GameActionResult.invalidAction("是你吗你就抢", playerId);
         }
-
-        //抢地主+1分
+        //叫地主
         if (ActionType.CALL == actionType) {
-            //抢了地主改变状态 变为叫地主 @Rainbow
+            //将改玩家设置为地主候选人
+            room.setLandLordCandidateId(currentTurnPlayerId);
+            //将该玩家设置为第一个叫地主的人
+            room.setFirstCallerId(currentTurnPlayerId);
+            //游戏阶段设置为抢地主阶段
             room.setPhase(GamePhase.ROB_LANDLORD);
-            //玩家分数 +1
-            room.addPlayerScores(playerId);
-            //更新最高分
-            if (room.getPlayerScores()
-                    .get(playerId) >= room.getHighestScore()) {
-                room.setHighestScore(room.getPlayerScores()
-                        .get(playerId));
-            }
-            //记录该玩家为当前最高分持有者
-            room.setLastHighestScorerId(playerId);
-            //设置轮数
-            room.addActionCount();
-            //轮到下一个玩家
-            if (playerId == 3) {
-                room.setCurrentTurnPlayerId(1);
-            } else {
-                room.setCurrentTurnPlayerId(playerId + 1);
-            }
+            room.setCurrentTurnPlayerId(nextPlayerId(currentTurnPlayerId));
         }
-        //不抢
+        //不叫
         if (ActionType.PASS == actionType) {
-            //记录不抢玩家数
+            //不叫那就别叫了
+            room.addPassPlayerId(currentTurnPlayerId);
+            //下一个
+            room.setCurrentTurnPlayerId(nextPlayerId(currentTurnPlayerId));
+            //不抢计数器+1
             room.addPassCount();
-            //设置轮数
-            room.addActionCount();
-            //轮到下一个玩家
-            if (playerId == 3) {
-                room.setCurrentTurnPlayerId(1);
-            } else {
-                room.setCurrentTurnPlayerId(playerId + 1);
-            }
         }
-
-        //先到2分的直接判断为地主
-        if (room.getPlayerScores()
-                .get(playerId) == 2 && room.getHighestScore() == 2) {
-            //将该玩家设为地主
-            room.findPlayerById(playerId)
-                    .setLandlord(true);
-            //将该玩家id设为地主id
-            room.setLandlordId(playerId);
-            //将底牌添加到地主手牌中
-            room.findPlayerById(playerId)
-                    .addCards(room.getHoleCards());
-            return ActionResult.successLandlordConfirmed("你是地主了", playerId);
-        }
-        //如果三人都不抢
+        //都不抢重开
         if (room.getPassCount() == 3) {
-            return ActionResult.failLandlordConfirmed("重开");
+            return GameActionResult.redeal("重开");
         }
-        //在第一轮如果没有人到两分
-        if (room.getActionCount() == 4 && room.getHighestScore() == 1) {
-            room.setLandlordId(room.getLastHighestScorerId());
-            return ActionResult.successLandlordConfirmed("你是地主了", playerId);
+        return GameActionResult.actionAccepted("操作成功", currentTurnPlayerId, room.getCurrentTurnPlayerId());
+    }
+
+    private Integer nextPlayerId(Integer currentPlayerId) {
+        if (currentPlayerId.equals(3)) {
+            return 1;
         }
-        return ActionResult.success("", playerId, room.getCurrentTurnPlayerId());
+        return currentPlayerId + 1;
     }
 }
