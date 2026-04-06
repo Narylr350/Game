@@ -90,6 +90,11 @@ public class Server {
      */
     private static void runGameFlow() {
         while (true) {
+
+
+
+
+
             if (currentRoom == null) {
                 System.out.println("当前房间为空，流程结束");
                 return;
@@ -117,6 +122,7 @@ public class Server {
                 return;
             }
 
+
             System.out.println("收到玩家 " + result.getPlayerId() + " 输入：" + result.getMessage());
 
             // 输入转动作
@@ -125,6 +131,7 @@ public class Server {
                 broadcast(result.getPlayerId(), "输入无效");
                 continue;
             }
+
             System.out.println("阶段: " + currentRoom.getPhase());
             System.out.println("当前操作人: " + currentRoom.getCurrentTurnPlayerId());
 
@@ -148,6 +155,7 @@ public class Server {
 
 //            processingStatus(result,currentRoom);
             // 打印处理后的房间状态，确认有没有切到抢地主
+            System.out.println(gameActionResult.getDisplayMessage());
             System.out.println("处理后阶段: " + currentRoom.getPhase());
             System.out.println("处理后当前操作人: " + currentRoom.getCurrentTurnPlayerId());
             System.out.println("处理后地主: " + currentRoom.getLandLordPlayerId());
@@ -157,6 +165,15 @@ public class Server {
             if (currentRoom.getLandLordPlayerId() != null) {
                 broadcast("地主已确定: 玩家 " + currentRoom.getLandLordPlayerId());
                 return;
+            }
+
+            //重开
+            if (gameActionResult.isNeedRedeal()){
+                currentRoom = GAME_FLOW.reDeal(currentRoom);
+                sendOpeningHands(currentRoom);
+                clearConsole();
+                System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
+
             }
 
             // 不 return，不 break，继续 while
@@ -417,6 +434,14 @@ public class Server {
         }
 
         return null;
+    }
+    //清空控制台
+    public static void clearConsole() {
+        try {
+            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

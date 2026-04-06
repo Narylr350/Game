@@ -52,7 +52,7 @@ public class GameRoom {
     }
 
     public int getPassCount() {
-        return passCount++;
+        return passCount;
     }
 
     public void addPassCount() {
