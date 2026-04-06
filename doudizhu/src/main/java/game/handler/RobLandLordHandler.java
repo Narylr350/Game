@@ -4,6 +4,7 @@ import game.ActionType;
 import game.GameActionResult;
 import game.GamePhase;
 import game.GameRoom;
+import game.PlayerState;
 
 import java.util.List;
 
@@ -37,6 +38,8 @@ public class RobLandLordHandler {
         if (currentTurnPlayerId.equals(room.getFirstCallerId())) {
             room.setPhase(GamePhase.PLAYING);
             room.setLandLordId(room.getLandLordCandidateId());
+            PlayerState player = room.findPlayerById(room.getLandLordPlayerId());
+            player.addCards(room.getHoleCards());
             return GameActionResult.landLordDecided("抢地主成功", room.getLandLordCandidateId());
         }
 

@@ -9,7 +9,7 @@ import java.util.Scanner;
 public class GameClient {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        final String host = "192.168.10.2";
+        final String host = "127.0.0.1";
         final int port = 8888;
 
         try {
