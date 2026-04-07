@@ -1,5 +1,4 @@
 package client;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -13,7 +12,7 @@ import java.util.Scanner;
  * 客户端启动后会提示输入玩家名称,然后进入消息收发循环。
  * </p>
  */
-public class GameClient {
+public class PlayerClient {
     /**
      * 客户端主方法。
      * <p>
@@ -49,7 +48,6 @@ public class GameClient {
                     break;
                 }
             }
-
             writer.close();
             socket.close();
             scanner.close();
