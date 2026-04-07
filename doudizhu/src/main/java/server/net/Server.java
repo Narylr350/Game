@@ -31,7 +31,7 @@ import java.util.List;
  * 当前实现为控制台版本,通过命令行输入输出进行游戏。
  * </p>
  */
-public class Server {
+public class Server{
 
     /**
      * 已连接的玩家集合
