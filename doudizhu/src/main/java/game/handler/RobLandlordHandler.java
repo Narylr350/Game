@@ -4,13 +4,17 @@ import game.GameActionResult;
 import game.GamePhase;
 import game.GameRoom;
 import game.action.ActionType;
+import game.action.GameAction;
 import game.state.PlayerState;
 
 import java.util.List;
 
-public class RobLandLordHandler {
+public class RobLandlordHandler {
 
-    public GameActionResult handle(GameRoom room, Integer playerId, ActionType actionType) {
+    public GameActionResult handle(GameRoom room, GameAction action) {
+        int playerId = action.getPlayerId();
+        ActionType actionType = action.getType();
+
         if (actionType == null) {
             return GameActionResult.invalidAction("你在干赣神魔", playerId);
         }

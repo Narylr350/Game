@@ -1,5 +1,6 @@
 package server.net;
 
+import game.GamePhase;
 import game.action.ActionType;
 import game.GameActionResult;
 import game.GameFlow;
@@ -123,11 +124,6 @@ public class Server {
      */
     private static void runGameFlow() {
         while (true) {
-
-
-
-
-
             if (currentRoom == null) {
                 System.out.println("当前房间为空，流程结束");
                 return;
@@ -196,8 +192,8 @@ public class Server {
             System.out.println("----------");
 
             // 地主已经确定，可以结束当前流程
-            if (currentRoom.getLandlordPlayerId() != null) {
-                broadcast("地主已确定: 玩家 " + currentRoom.getLandlordPlayerId());
+            if (gameActionResult.getNextPhase() == GamePhase.PLAYING) {
+                broadcast("地主已确定: 玩家 " + gameActionResult.getLandlordPlayerId());
                 sendOpeningHands(currentRoom);
                 System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
                 return;

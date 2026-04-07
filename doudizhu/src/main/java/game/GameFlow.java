@@ -2,8 +2,8 @@ package game;
 
 import game.action.ActionType;
 import game.action.GameAction;
-import game.handler.CallLandLordHandler;
-import game.handler.RobLandLordHandler;
+import game.handler.CallLandlordHandler;
+import game.handler.RobLandlordHandler;
 import game.state.PlayerState;
 import util.CardUtil;
 
@@ -16,29 +16,26 @@ import static rule.NameRule.validatePlayerNames;
 
 public class GameFlow {
 
-    private final CallLandLordHandler callLandlordHandler;
-    private final RobLandLordHandler robLandlordHandler;
+    private final CallLandlordHandler callLandlordHandler;
+    private final RobLandlordHandler robLandlordHandler;
 
     public GameFlow() {
-        this.callLandlordHandler = new CallLandLordHandler();
-        this.robLandlordHandler = new RobLandLordHandler();
+        this.callLandlordHandler = new CallLandlordHandler();
+        this.robLandlordHandler = new RobLandlordHandler();
     }
 
     public GameActionResult handlePlayerAction(GameRoom room, GameAction action) {
         GamePhase currentPhase = room.getCurrentPhase();
-        int playerId = action.getPlayerId();
-        ActionType actionType = action.getType();
-
         if (currentPhase == GamePhase.DEALING) {
             return GameActionResult.redeal("开始重新发牌");
         }
 
         if (currentPhase == GamePhase.CALL_LANDLORD) {
-            return callLandlordHandler.handle(room, playerId, actionType);
+            return callLandlordHandler.handle(room, action);
         }
 
         if (currentPhase == GamePhase.ROB_LANDLORD) {
-            return robLandlordHandler.handle(room, playerId, actionType);
+            return robLandlordHandler.handle(room, action);
         }
 
         if (currentPhase == GamePhase.PLAYING) {

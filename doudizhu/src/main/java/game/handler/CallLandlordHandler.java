@@ -4,11 +4,15 @@ import game.GameActionResult;
 import game.GamePhase;
 import game.GameRoom;
 import game.action.ActionType;
+import game.action.GameAction;
 import rule.LandlordRule;
 
-public class CallLandLordHandler {
+public class CallLandlordHandler {
 
-    public GameActionResult handle(GameRoom room, int playerId, ActionType actionType) {
+    public GameActionResult handle(GameRoom room, GameAction action) {
+        int playerId = action.getPlayerId();
+        ActionType actionType = action.getType();
+
         if (!LandlordRule.canCallLandlord(room)) {
             return GameActionResult.invalidAction("不能叫地主");
         }
