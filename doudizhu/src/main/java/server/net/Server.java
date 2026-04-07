@@ -188,11 +188,19 @@ public class Server {
             System.out.println("处理后阶段: " + currentRoom.getCurrentPhase());
             System.out.println("处理后当前操作人: " + currentRoom.getCurrentPlayerId());
             System.out.println("处理后地主: " + currentRoom.getLandlordPlayerId());
+            System.out.println("第一个叫地主ID"+currentRoom.getFirstCallerId());
+            System.out.println("不抢地主次数");
+            System.out.println("不叫地主次数"+currentRoom.getCallPassCount());
             System.out.println("----------");
+
+
+
 
             // 地主已经确定，可以结束当前流程
             if (gameResult.getEventType() == GameEventType.LANDLORD_DECIDED) {
                 broadcast("地主已确定: 玩家 " + currentRoom.getLandlordPlayerId());
+                broadcast("地主底牌"+ CardUtil.cardsToString(currentRoom.getHoleCards()));
+
                 sendOpeningHands(currentRoom);
                 System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
                 return;
@@ -204,6 +212,18 @@ public class Server {
                 sendOpeningHands(currentRoom);
                 System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
                 continue;
+            }
+
+            //出牌阶段
+            if (currentRoom.getCurrentPhase() ==GamePhase.PLAYING){
+
+            }
+            //结束阶段
+            if (currentRoom.getCurrentPhase() ==GamePhase.SETTLE){
+                //地主赢了
+//                if (){
+//
+//                }
             }
 
             // 不 return，不 break，继续 while
