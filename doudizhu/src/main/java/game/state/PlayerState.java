@@ -22,9 +22,9 @@ public class PlayerState {
      * 创建时默认设置玩家为在线状态。
      * </p>
      *
-     * @param playerId 玩家唯一标识ID
+     * @param playerId   玩家唯一标识ID
      * @param playerName 玩家名称
-     * @param cards 玩家的初始手牌集合
+     * @param cards      玩家的初始手牌集合
      */
     public PlayerState(int playerId, String playerName, TreeSet<Integer> cards) {
         this.playerId = playerId;

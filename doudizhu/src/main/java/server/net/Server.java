@@ -1,10 +1,11 @@
 package server.net;
 
-import game.GamePhase;
-import game.action.ActionType;
-import game.GameActionResult;
+import game.GameEventType;
 import game.GameFlow;
+import game.GamePhase;
+import game.GameResult;
 import game.GameRoom;
+import game.action.ActionType;
 import game.action.GameAction;
 import game.state.PlayerState;
 import util.CardUtil;
@@ -170,37 +171,37 @@ public class Server {
 
             // 调用外部逻辑
 
-            GameActionResult gameActionResult = GAME_FLOW.handlePlayerAction(currentRoom, action);
+            GameResult gameResult = GAME_FLOW.handlePlayerAction(currentRoom, action);
 
-            if (gameActionResult == null) {
+            if (gameResult == null) {
                 System.out.println("动作处理返回空，流程结束");
                 return;
             }
 
             // 广播外部逻辑返回的消息
-            if (gameActionResult.getMessage() != null && !gameActionResult.getMessage()
+            if (gameResult.getMessage() != null && !gameResult.getMessage()
                     .isEmpty()) {
-                broadcast(gameActionResult.getMessage());
+                broadcast(gameResult.getMessage());
             }
 
 //            processingStatus(result,currentRoom);
             // 打印处理后的房间状态，确认有没有切到抢地主
-            System.out.println(gameActionResult.getMessage());
+            System.out.println(gameResult.getMessage());
             System.out.println("处理后阶段: " + currentRoom.getCurrentPhase());
             System.out.println("处理后当前操作人: " + currentRoom.getCurrentPlayerId());
             System.out.println("处理后地主: " + currentRoom.getLandlordPlayerId());
             System.out.println("----------");
 
             // 地主已经确定，可以结束当前流程
-            if (gameActionResult.getNextPhase() == GamePhase.PLAYING) {
-                broadcast("地主已确定: 玩家 " + gameActionResult.getLandlordPlayerId());
+            if (currentRoom.getCurrentPhase() == GamePhase.PLAYING) {
+                broadcast("地主已确定: 玩家 " + currentRoom.getLandlordPlayerId());
                 sendOpeningHands(currentRoom);
                 System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
                 return;
             }
 
             //重开
-            if (gameActionResult.isNeedRedeal()){
+            if (gameResult.getEventType() == GameEventType.REDEAL_REQUIRED) {
                 currentRoom = GAME_FLOW.reDeal(currentRoom);
                 sendOpeningHands(currentRoom);
                 System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
@@ -242,7 +243,7 @@ public class Server {
      * 接收客户端连接，并创建 PlayerConnection 放进集合。
      *
      * @param serverSocket 服务端Socket
-     * @param playerCount 需要接收的玩家数量
+     * @param playerCount  需要接收的玩家数量
      * @throws IOException 如果接收连接时发生IO错误
      */
     private static void acceptPlayers(ServerSocket serverSocket, int playerCount) throws IOException {
@@ -372,7 +373,7 @@ public class Server {
      * 给除自己以外的玩家广播消息。
      *
      * @param msg 要广播的消息内容
-     * @param id 发送者玩家ID(不会收到此消息)
+     * @param id  发送者玩家ID(不会收到此消息)
      */
     private static void broadcast(String msg, int id) {
         for (PlayerConnection player : PLAYERS) {
@@ -385,7 +386,7 @@ public class Server {
     /**
      * 给指定ID的玩家发消息。
      *
-     * @param id 接收消息的玩家ID
+     * @param id  接收消息的玩家ID
      * @param msg 要发送的消息内容
      */
     private static void broadcast(int id, String msg) {
@@ -427,7 +428,7 @@ public class Server {
      * 4. 返回输入结果
      *
      * @param playerId 等待输入的玩家ID
-     * @param type 当前等待的消息类型
+     * @param type     当前等待的消息类型
      * @return 玩家输入的结果对象,如果等待失败则返回null
      */
     public static Result waitPlayerAction(int playerId, MessageType type) {
@@ -472,7 +473,7 @@ public class Server {
      * 将玩家输入的字符串解析为对应的操作类型。
      *
      * @param input 玩家输入的字符串
-     * @param type 当前阶段的消息类型
+     * @param type  当前阶段的消息类型
      * @return 解析后的操作类型,如果输入无效则返回null
      */
     private static ActionType parseAction(String input, MessageType type) {
@@ -513,7 +514,9 @@ public class Server {
      */
     public static void clearConsole() {
         try {
-            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            new ProcessBuilder("cmd", "/c", "cls").inheritIO()
+                    .start()
+                    .waitFor();
         } catch (Exception e) {
             e.printStackTrace();
         }

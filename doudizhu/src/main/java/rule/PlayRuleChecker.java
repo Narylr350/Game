@@ -26,9 +26,9 @@ public class PlayRuleChecker {
      * </ul>
      * </p>
      *
-     * @param room 游戏房间对象
+     * @param room     游戏房间对象
      * @param playerId 要出牌的玩家ID
-     * @param cards 要打出的牌组
+     * @param cards    要打出的牌组
      * @return 如果满足所有基础条件则返回true,否则返回false
      */
     public boolean canPlay(GameRoom room, int playerId, List<Integer> cards) {

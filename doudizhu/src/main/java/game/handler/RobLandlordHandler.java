@@ -1,7 +1,7 @@
 package game.handler;
 
-import game.GameActionResult;
 import game.GamePhase;
+import game.GameResult;
 import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
@@ -11,17 +11,17 @@ import java.util.List;
 
 public class RobLandlordHandler {
 
-    public GameActionResult handle(GameRoom room, GameAction action) {
+    public GameResult handle(GameRoom room, GameAction action) {
         int playerId = action.getPlayerId();
         ActionType actionType = action.getType();
 
         if (actionType == null) {
-            return GameActionResult.invalidAction("你在干赣神魔", playerId);
+            return GameResult.rejected("你在干赣神魔", playerId);
         }
 
         Integer currentPlayerId = room.getCurrentPlayerId();
         if (currentPlayerId == null || !currentPlayerId.equals(playerId)) {
-            return GameActionResult.invalidAction("是你吗你就叫", playerId);
+            return GameResult.rejected("是你吗你就叫", playerId);
         }
 
         List<Integer> callPassPlayerIds = room.getCallPassPlayerIds();
@@ -35,7 +35,7 @@ public class RobLandlordHandler {
         } else if (ActionType.PASS == actionType) {
             room.setCurrentPlayerId(nextPlayerId(currentPlayerId));
         } else {
-            return GameActionResult.invalidAction("当前操作无效", playerId);
+            return GameResult.rejected("当前操作无效", playerId);
         }
 
         if (currentPlayerId.equals(room.getFirstCallerId())) {
@@ -47,10 +47,10 @@ public class RobLandlordHandler {
                 player.addCards(room.getHoleCards());
             }
 
-            return GameActionResult.landlordDecided("抢地主成功", room.getLandlordCandidateId());
+            return GameResult.landlordDecided("抢地主成功");
         }
 
-        return GameActionResult.actionAccepted("操作成功", room.getCurrentPlayerId());
+        return GameResult.accepted("操作成功", room.getCurrentPlayerId());
     }
 
     private Integer nextPlayerId(Integer currentPlayerId) {

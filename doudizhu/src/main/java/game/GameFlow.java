@@ -1,6 +1,5 @@
 package game;
 
-import game.action.ActionType;
 import game.action.GameAction;
 import game.handler.CallLandlordHandler;
 import game.handler.RobLandlordHandler;
@@ -24,10 +23,18 @@ public class GameFlow {
         this.robLandlordHandler = new RobLandlordHandler();
     }
 
-    public GameActionResult handlePlayerAction(GameRoom room, GameAction action) {
+    private static List<String> collectPlayerNames(GameRoom room) {
+        List<String> playerNames = new ArrayList<>();
+        for (PlayerState player : room.getPlayers()) {
+            playerNames.add(player.getPlayerName());
+        }
+        return playerNames;
+    }
+
+    public GameResult handlePlayerAction(GameRoom room, GameAction action) {
         GamePhase currentPhase = room.getCurrentPhase();
         if (currentPhase == GamePhase.DEALING) {
-            return GameActionResult.redeal("开始重新发牌");
+            return GameResult.redealRequired("开始重新发牌");
         }
 
         if (currentPhase == GamePhase.CALL_LANDLORD) {
@@ -39,10 +46,10 @@ public class GameFlow {
         }
 
         if (currentPhase == GamePhase.PLAYING) {
-            return GameActionResult.invalidAction("出牌阶段暂未实现");
+            return GameResult.rejected("出牌阶段暂未实现");
         }
 
-        return GameActionResult.invalidAction("当前阶段禁止操作");
+        return GameResult.rejected("当前阶段禁止操作");
     }
 
     public GameRoom startRoom(List<String> playerNames) {
@@ -83,7 +90,8 @@ public class GameFlow {
         }
 
         for (int i = 3; i < shuffledDeck.size(); i++) {
-            hands.get((i - 3) % 3).add(shuffledDeck.get(i));
+            hands.get((i - 3) % 3)
+                    .add(shuffledDeck.get(i));
         }
 
         List<PlayerState> players = new ArrayList<>();
@@ -92,13 +100,5 @@ public class GameFlow {
         }
 
         return new DealResult(players, holeCards);
-    }
-
-    private static List<String> collectPlayerNames(GameRoom room) {
-        List<String> playerNames = new ArrayList<>();
-        for (PlayerState player : room.getPlayers()) {
-            playerNames.add(player.getPlayerName());
-        }
-        return playerNames;
     }
 }

@@ -22,10 +22,10 @@ public class PlayerConnection {
      * 创建玩家连接对象。
      *
      * @param playerId 玩家唯一标识ID
-     * @param name 玩家名称
-     * @param socket 客户端Socket连接
-     * @param reader 缓冲输入流
-     * @param writer 打印输出流
+     * @param name     玩家名称
+     * @param socket   客户端Socket连接
+     * @param reader   缓冲输入流
+     * @param writer   打印输出流
      */
     public PlayerConnection(int playerId, String name, Socket socket,
                             BufferedReader reader, PrintWriter writer) {

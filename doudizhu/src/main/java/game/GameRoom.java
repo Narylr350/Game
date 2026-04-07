@@ -13,20 +13,17 @@ public class GameRoom {
     // ===== 房间基础 =====
     private final List<PlayerState> playerStates;
     private final TreeSet<Integer> holeCards;
-
+    private final List<Integer> callPassPlayerIds;
+    // ===== 出牌阶段状态 =====
+    private final PlayState playState;
     // ===== 流程状态 =====
     private GamePhase currentPhase;
     private Integer currentPlayerId;
     private Integer landlordPlayerId;
-
     // ===== 地主阶段状态 =====
     private int callPassCount;
-    private final List<Integer> callPassPlayerIds;
     private Integer firstCallerId;
     private Integer landlordCandidateId;
-
-    // ===== 出牌阶段状态 =====
-    private final PlayState playState;
 
     public GameRoom(List<PlayerState> players, TreeSet<Integer> holeCards) {
         this.playerStates = new ArrayList<>(players);
@@ -67,16 +64,16 @@ public class GameRoom {
         this.currentPlayerId = currentPlayerId;
     }
 
+    public Integer getLandlordPlayerId() {
+        return landlordPlayerId;
+    }
+
     // ===== 地主 =====
     public void setLandlordPlayerId(Integer landlordPlayerId) {
         this.landlordPlayerId = landlordPlayerId;
         for (PlayerState player : playerStates) {
             player.setLandlord(landlordPlayerId != null && player.getPlayerId() == landlordPlayerId);
         }
-    }
-
-    public Integer getLandlordPlayerId() {
-        return landlordPlayerId;
     }
 
     // ===== 地主阶段 =====

@@ -1,7 +1,7 @@
 package game.handler;
 
-import game.GameActionResult;
 import game.GamePhase;
+import game.GameResult;
 import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
@@ -9,21 +9,21 @@ import rule.LandlordRule;
 
 public class CallLandlordHandler {
 
-    public GameActionResult handle(GameRoom room, GameAction action) {
+    public GameResult handle(GameRoom room, GameAction action) {
         int playerId = action.getPlayerId();
         ActionType actionType = action.getType();
 
         if (!LandlordRule.canCallLandlord(room)) {
-            return GameActionResult.invalidAction("不能叫地主");
+            return GameResult.rejected("不能叫地主");
         }
 
         if (actionType == null) {
-            return GameActionResult.invalidAction("你在干赣神魔", playerId);
+            return GameResult.rejected("你在干赣神魔", playerId);
         }
 
         Integer currentPlayerId = room.getCurrentPlayerId();
         if (currentPlayerId == null || currentPlayerId != playerId) {
-            return GameActionResult.invalidAction("是你吗你就抢", playerId);
+            return GameResult.rejected("是你吗你就抢", playerId);
         }
 
         if (ActionType.CALL == actionType) {
@@ -31,7 +31,7 @@ public class CallLandlordHandler {
             room.setFirstCallerId(currentPlayerId);
             room.setCurrentPhase(GamePhase.ROB_LANDLORD);
             room.setCurrentPlayerId(nextPlayerId(currentPlayerId));
-            return GameActionResult.actionAccepted("叫地主成功", room.getCurrentPlayerId());
+            return GameResult.accepted("叫地主成功", room.getCurrentPlayerId());
         }
 
         if (ActionType.PASS == actionType) {
@@ -40,13 +40,13 @@ public class CallLandlordHandler {
             room.incrementCallPassCount();
 
             if (room.getCallPassCount() == 3) {
-                return GameActionResult.redeal("重开");
+                return GameResult.redealRequired("");
             }
 
-            return GameActionResult.actionAccepted("不叫地主", room.getCurrentPlayerId());
+            return GameResult.accepted("不叫地主", room.getCurrentPlayerId());
         }
 
-        return GameActionResult.invalidAction("当前操作无效", playerId);
+        return GameResult.rejected("当前操作无效", playerId);
     }
 
     private Integer nextPlayerId(Integer currentPlayerId) {

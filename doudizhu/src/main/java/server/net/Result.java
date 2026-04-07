@@ -20,8 +20,8 @@ public class Result {
     /**
      * 创建网络通信结果对象。
      *
-     * @param playerId 当前操作的玩家ID
-     * @param msg 消息内容
+     * @param playerId      当前操作的玩家ID
+     * @param msg           消息内容
      * @param currentStatus 当前游戏阶段类型
      */
     public Result(int playerId, String msg, MessageType currentStatus) {

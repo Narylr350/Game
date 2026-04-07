@@ -19,7 +19,7 @@ public class DealResult {
     /**
      * 创建发牌结果对象。
      *
-     * @param players 所有玩家的状态列表
+     * @param players   所有玩家的状态列表
      * @param holeCards 底牌集合
      */
     public DealResult(List<PlayerState> players, TreeSet<Integer> holeCards) {
