@@ -27,8 +27,8 @@ public class GameFlow {
     private final RobLandlordHandler robLandlordHandler;
 
     public GameFlow() {
-        this.callLandlordHandler = new CallLandlordHandler();
-        this.robLandlordHandler = new RobLandlordHandler();
+        this.callLandlordHandler = new CallLandlordHandler(this);
+        this.robLandlordHandler = new RobLandlordHandler(this);
     }
 
     /**
@@ -162,5 +162,20 @@ public class GameFlow {
         }
 
         return new DealResult(players, holeCards);
+    }
+    /**
+     * 确认地主身份并推进到出牌阶段。
+     *
+     * @param room 游戏房间
+     * @param landlordId 地主玩家ID
+     */
+    public void confirmLandlord(GameRoom room, Integer landlordId) {
+        room.setCurrentPhase(GamePhase.PLAYING);
+        room.setLandlordPlayerId(landlordId);
+
+        PlayerState player = room.getPlayerById(landlordId);
+        if (player != null) {
+            player.addCards(room.getHoleCards());
+        }
     }
 }

@@ -146,7 +146,7 @@ public class GameRoom {
     /**
      * 清空叫地主阶段不叫的玩家ID列表。
      */
-    public void resetCallPasserId() {
+    public void resetCallPassPlayerIds() {
         callPassPlayerIds.clear();
     }
 
@@ -162,6 +162,30 @@ public class GameRoom {
      */
     public void resetLandlordCandidateId() {
         this.landlordCandidateId = null;
+    }
+
+    /**
+     * 重置叫地主阶段的所有相关状态。
+     * <p>
+     * 该方法会依次调用以下方法，清空叫地主阶段的全部状态：
+     * <ul>
+     *   <li>{@link #resetCallPassCount()} - 重置叫地主不叫的次数</li>
+     *   <li>{@link #resetCallPassPlayerIds()} - 清空叫地主不叫的玩家ID列表</li>
+     *   <li>{@link #resetFirstCallerId()} - 重置第一个叫地主的玩家ID</li>
+     *   <li>{@link #resetLandlordCandidateId()} - 重置地主候选人ID</li>
+     * </ul>
+     * <p>
+     * 通常在以下场景调用：
+     * <ul>
+     *   <li>重新开始叫地主阶段</li>
+     *   <li>一轮叫地主结束后无人成为地主</li>
+     * </ul>
+     */
+    public void resetLandlordPhaseState() {
+        resetCallPassCount();
+        resetCallPassPlayerIds();
+        resetFirstCallerId();
+        resetLandlordCandidateId();
     }
 
     /**
