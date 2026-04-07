@@ -174,7 +174,8 @@ public class Server {
 
             // 广播外部逻辑返回的消息
             if (gameResult.getEventType() ==GameEventType.ACTION_ACCEPTED) {
-                broadcast(gameResult.getMessage());
+                broadcast(playerId,gameResult.getMessage());
+                broadcast(PLAYERS.get(playerId-1).getName()+gameResult.getMessage(),playerId);
             }
             if (gameResult.getEventType() ==GameEventType.ACTION_REJECTED){
                 broadcast(playerId,gameResult.getMessage());
