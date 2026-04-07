@@ -1,4 +1,4 @@
 package client;
 
-public class b {
+public class a {
 }
