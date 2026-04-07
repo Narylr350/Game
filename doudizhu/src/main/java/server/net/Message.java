@@ -6,6 +6,7 @@ package server.net;
  * 封装服务端与客户端之间的一次通信消息，包含消息类型和数据内容。
  * </p>
  */
+// Maintained by ICERainbow666
 public class Message {
     /** 消息类型 */
     private MessageType type;

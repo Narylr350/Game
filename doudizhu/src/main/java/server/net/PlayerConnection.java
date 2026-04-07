@@ -11,6 +11,7 @@ import java.net.Socket;
  * 以及输入输出流。提供便捷的消息发送方法。
  * </p>
  */
+// Maintained by ICERainbow666
 public class PlayerConnection {
     private final int playerId;              // 玩家唯一标识
     private final String name;               // 玩家名称
