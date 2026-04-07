@@ -45,6 +45,9 @@ public class CallLandlordHandler {
             room.setFirstCallerId(currentPlayerId);
             room.setCurrentPhase(GamePhase.ROB_LANDLORD);
             room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
+            if (room.getCallPassCount() == 2){
+                return GameResult.landlordDecided("地主确认：玩家 " + room.getLandlordPlayerId());
+            }
             return GameResult.accepted("叫地主");
         }
 
@@ -59,7 +62,9 @@ public class CallLandlordHandler {
                 room.setCurrentPhase(GamePhase.DEALING);
                 return GameResult.redealRequired("三人都不叫地主，重新发牌");
             }
-
+            if (room.getCallPassCount() == 2){
+                return GameResult.landlordDecided("地主确认：玩家 " + room.getLandlordPlayerId());
+            }
             return GameResult.accepted("不叫地主");
         }
 
