@@ -1,11 +1,8 @@
 package server.net;
 
-import game.GameEventType;
-import game.GameFlow;
-import game.GamePhase;
-import game.GameResult;
-import game.GameRoom;
+import game.*;
 import game.action.ActionType;
+import game.GameResult;
 import game.action.GameAction;
 import game.state.PlayerState;
 import util.CardUtil;
@@ -146,6 +143,7 @@ public class Server {
 
             // 给当前玩家发提示，并等待他的输入
             Result result = waitPlayerAction(playerId, messageType);
+
             if (result == null) {
                 System.out.println("等待玩家输入失败，流程结束");
                 return;
@@ -161,10 +159,6 @@ public class Server {
                     actionType,
                     null
             );
-            if (actionType == null) {
-                broadcast(result.getPlayerId(), "输入无效");
-                continue;
-            }
 
             System.out.println("阶段: " + currentRoom.getCurrentPhase());
             System.out.println("当前操作人: " + currentRoom.getCurrentPlayerId());
@@ -179,9 +173,11 @@ public class Server {
             }
 
             // 广播外部逻辑返回的消息
-            if (gameResult.getMessage() != null && !gameResult.getMessage()
-                    .isEmpty()) {
+            if (gameResult.getEventType() ==GameEventType.ACTION_ACCEPTED) {
                 broadcast(gameResult.getMessage());
+            }
+            if (gameResult.getEventType() ==GameEventType.ACTION_REJECTED){
+                broadcast(playerId,gameResult.getMessage());
             }
 
 //            processingStatus(result,currentRoom);
@@ -193,7 +189,7 @@ public class Server {
             System.out.println("----------");
 
             // 地主已经确定，可以结束当前流程
-            if (currentRoom.getCurrentPhase() == GamePhase.PLAYING) {
+            if (gameResult.getEventType() == GameEventType.LANDLORD_DECIDED) {
                 broadcast("地主已确定: 玩家 " + currentRoom.getLandlordPlayerId());
                 sendOpeningHands(currentRoom);
                 System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
@@ -201,7 +197,7 @@ public class Server {
             }
 
             //重开
-            if (gameResult.getEventType() == GameEventType.REDEAL_REQUIRED) {
+            if (gameResult.getEventType() == GameEventType.REDEAL_REQUIRED){
                 currentRoom = GAME_FLOW.reDeal(currentRoom);
                 sendOpeningHands(currentRoom);
                 System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
@@ -243,7 +239,7 @@ public class Server {
      * 接收客户端连接，并创建 PlayerConnection 放进集合。
      *
      * @param serverSocket 服务端Socket
-     * @param playerCount  需要接收的玩家数量
+     * @param playerCount 需要接收的玩家数量
      * @throws IOException 如果接收连接时发生IO错误
      */
     private static void acceptPlayers(ServerSocket serverSocket, int playerCount) throws IOException {
@@ -317,12 +313,12 @@ public class Server {
                         player.send("现在还没轮到你操作");
                         continue;
                     }
-
-                    // 空输入不处理
-                    if (msg.isEmpty()) {
-                        player.send("输入不能为空");
-                        continue;
-                    }
+//
+//                    // 空输入不处理
+//                    if (msg.isEmpty()) {
+//                        player.send("输入不能为空");
+//                        continue;
+//                    }
 
                     // 记录当前玩家输入
                     pendingResult = new Result(player.getPlayerId(), msg, currentWaitingMessageType);
@@ -373,7 +369,7 @@ public class Server {
      * 给除自己以外的玩家广播消息。
      *
      * @param msg 要广播的消息内容
-     * @param id  发送者玩家ID(不会收到此消息)
+     * @param id 发送者玩家ID(不会收到此消息)
      */
     private static void broadcast(String msg, int id) {
         for (PlayerConnection player : PLAYERS) {
@@ -386,7 +382,7 @@ public class Server {
     /**
      * 给指定ID的玩家发消息。
      *
-     * @param id  接收消息的玩家ID
+     * @param id 接收消息的玩家ID
      * @param msg 要发送的消息内容
      */
     private static void broadcast(int id, String msg) {
@@ -442,11 +438,13 @@ public class Server {
             // 清空上一次残留结果
             pendingResult = null;
 
+
+
             // 通知所有玩家当前轮到谁
-            broadcast("系统：当前轮到玩家 " + playerId + " 操作");
+            broadcast("系统：当前轮到玩家 " + currentPlayerId + " 操作");
 
             // 只提示当前玩家输入
-            broadcast(playerId, getMessage(type));
+            broadcast(currentPlayerId, getMessage(type));
 
             // 主线程阻塞等待，直到客户端线程提交结果
             while (pendingResult == null) {
@@ -473,7 +471,7 @@ public class Server {
      * 将玩家输入的字符串解析为对应的操作类型。
      *
      * @param input 玩家输入的字符串
-     * @param type  当前阶段的消息类型
+     * @param type 当前阶段的消息类型
      * @return 解析后的操作类型,如果输入无效则返回null
      */
     private static ActionType parseAction(String input, MessageType type) {
@@ -514,9 +512,7 @@ public class Server {
      */
     public static void clearConsole() {
         try {
-            new ProcessBuilder("cmd", "/c", "cls").inheritIO()
-                    .start()
-                    .waitFor();
+            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
         } catch (Exception e) {
             e.printStackTrace();
         }
