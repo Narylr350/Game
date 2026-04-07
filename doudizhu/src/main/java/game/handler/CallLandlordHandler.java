@@ -23,6 +23,7 @@ public class CallLandlordHandler {
      * @return 处理结果
      */
     public GameResult handle(GameRoom room, GameAction action) {
+        Integer currentPlayerId = room.getCurrentPlayerId();
         int playerId = action.getPlayerId();
         ActionType actionType = action.getType();
 
@@ -34,19 +35,20 @@ public class CallLandlordHandler {
             return GameResult.rejected("你在干赣神魔", playerId);
         }
 
-        Integer currentPlayerId = room.getCurrentPlayerId();
         if (currentPlayerId == null || currentPlayerId != playerId) {
             return GameResult.rejected("是你吗你就抢", playerId);
         }
 
+        // 叫地主
         if (ActionType.CALL == actionType) {
             room.setLandlordCandidateId(currentPlayerId);
             room.setFirstCallerId(currentPlayerId);
             room.setCurrentPhase(GamePhase.ROB_LANDLORD);
             room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
-            return GameResult.accepted("叫地主成功", room.getCurrentPlayerId());
+            return GameResult.accepted("叫地主");
         }
 
+        // 不叫
         if (ActionType.PASS == actionType) {
             room.addCallPassPlayerId(currentPlayerId);
             room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
@@ -54,10 +56,11 @@ public class CallLandlordHandler {
 
             if (room.getCallPassCount() == 3) {
                 room.resetCallPassCount();
-                return GameResult.redealRequired("");
+                room.setCurrentPhase(GamePhase.DEALING);
+                return GameResult.redealRequired("三人都不叫地主，重新发牌");
             }
 
-            return GameResult.accepted("不叫地主", room.getCurrentPlayerId());
+            return GameResult.accepted("不叫地主");
         }
 
         return GameResult.rejected("当前操作无效", playerId);

@@ -115,10 +115,14 @@ public class Server {
     }
 
     /**
-     * 主流程驱动入口。
+     * 运行当前房间的主流程。
      * <p>
-     * 这里只做“流程调度”，不写规则判断。
-     * 具体的叫地主 / 抢地主 / 出牌 / 结算逻辑，都预留给外部逻辑层处理。
+     * 职责：
+     * 1. 持续读取当前可操作玩家；
+     * 2. 在抢地主阶段对“叫地主阶段已选择不叫”的玩家执行自动 PASS；
+     * 3. 等待正常玩家输入并交给 GameFlow 处理；
+     * 4. 根据处理结果决定是否继续当前流程、重开或结束。
+     * </p>
      */
     private static void runGameFlow() {
         while (true) {
@@ -133,102 +137,149 @@ public class Server {
                 return;
             }
 
+            /*
+              抢地主阶段自动 PASS：
+              如果当前阶段是抢地主，并且当前玩家在“叫地主阶段已选择不叫”的列表中，
+              那么该玩家本轮不需要再等待输入，直接自动执行 PASS。
+             */
+            if (currentRoom.getCurrentPhase() == GamePhase.ROB_LANDLORD
+                    && currentRoom.getCallPassPlayerIds().contains(playerId)) {
+
+                GameAction autoPassAction = new GameAction(playerId, ActionType.PASS, null);
+
+                // 如果 handleGameResult 返回 false，说明当前流程应结束
+                if (!handleGameResult(playerId, autoPassAction)) {
+                    return;
+                }
+
+                // 自动 PASS 完成后直接进入下一轮，重新读取新的 currentPlayerId
+                continue;
+            }
+
             MessageType messageType = resolveCurrentMessageType(currentRoom);
             if (messageType == null) {
                 System.out.println("当前阶段没有对应提示类型，流程结束。当前阶段：" + currentRoom.getCurrentPhase());
                 return;
             }
 
-            // 给当前玩家发提示，并等待他的输入
+            /*
+              正常玩家输入流程：
+              1. 给当前玩家发提示；
+              2. 等待其输入；
+              3. 解析输入为动作；
+              4. 交给统一的动作处理逻辑。
+             */
             Result result = waitPlayerAction(playerId, messageType);
-
             if (result == null) {
                 System.out.println("等待玩家输入失败，流程结束");
                 return;
             }
 
-
             System.out.println("收到玩家 " + result.getPlayerId() + " 输入：" + result.getMessage());
 
-            // 输入转动作
             ActionType actionType = parseAction(result.getMessage(), messageType);
-            GameAction action = new GameAction(
-                    result.getPlayerId(),
-                    actionType,
-                    null
-            );
+            GameAction action = new GameAction(result.getPlayerId(), actionType, null);
 
             System.out.println("阶段: " + currentRoom.getCurrentPhase());
             System.out.println("当前操作人: " + currentRoom.getCurrentPlayerId());
 
-            // 调用外部逻辑
-
-            GameResult gameResult = GAME_FLOW.handlePlayerAction(currentRoom, action);
-
-            if (gameResult == null) {
-                System.out.println("动作处理返回空，流程结束");
+            // 如果 handleGameResult 返回 false，说明当前流程应结束
+            if (!handleGameResult(playerId, action)) {
                 return;
             }
+        }
+    }
 
-            // 广播外部逻辑返回的消息
-            if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED) {
-                // 操作者收到私有提示
-                broadcast(playerId, gameResult.getMessage());
-                // 其他玩家收到带操作者名字的提示
-                if (playerId >= 1 && playerId <= PLAYERS.size()) {
-                    broadcast(PLAYERS.get(playerId - 1).getName() + gameResult.getMessage(), playerId);
-                }
+    /**
+     * 统一处理一个玩家动作，并根据处理结果控制主循环。
+     * <p>
+     * 返回值语义：
+     * true  -> 当前流程继续，runGameFlow 继续 while
+     * false -> 当前流程结束，runGameFlow 应直接 return
+     * </p>
+     *
+     * @param playerId 当前动作的发起玩家ID
+     * @param action   当前要处理的动作
+     * @return 是否继续当前流程
+     */
+    private static boolean handleGameResult(Integer playerId, GameAction action) {
+        GameResult gameResult = GAME_FLOW.handlePlayerAction(currentRoom, action);
+
+        if (gameResult == null) {
+            System.out.println("动作处理返回空，流程结束");
+            return false;
+        }
+
+        // 广播动作处理结果
+        broadcastResult(playerId, gameResult);
+
+        // 打印当前状态，便于调试
+        System.out.println(gameResult.getMessage());
+        System.out.println("处理后阶段: " + currentRoom.getCurrentPhase());
+        System.out.println("处理后当前操作人: " + currentRoom.getCurrentPlayerId());
+        System.out.println("处理后地主: " + currentRoom.getLandlordPlayerId());
+        System.out.println("第一个叫地主ID: " + currentRoom.getFirstCallerId());
+        System.out.println("不叫地主次数: " + currentRoom.getCallPassCount());
+        System.out.println("----------");
+
+        /*
+          地主已确认：
+          当前地主阶段流程结束，广播地主信息和底牌，并把地主最终手牌发给各玩家。
+         */
+        if (gameResult.getEventType() == GameEventType.LANDLORD_DECIDED) {
+            broadcast("地主已确定: 玩家 " + currentRoom.getLandlordPlayerId());
+            broadcast("地主底牌 " + CardUtil.cardsToString(currentRoom.getHoleCards()));
+
+            sendOpeningHands(currentRoom);
+            System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
+            return false;
+        }
+
+        /*
+          需要重开：
+          重新发牌并广播重开消息，然后继续主循环。
+         */
+        if (gameResult.getEventType() == GameEventType.REDEAL_REQUIRED) {
+            currentRoom = GAME_FLOW.reDeal(currentRoom);
+            broadcast(gameResult.getMessage());
+            sendOpeningHands(currentRoom);
+            System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
+            return true;
+        }
+
+        /*
+          其他普通情况：
+          当前流程继续。
+         */
+        return true;
+    }
+
+    /**
+     * 按结果类型向玩家广播消息。
+     * <p>
+     * 规则：
+     * 1. ACTION_ACCEPTED：
+     *    - 操作者收到自己的私有提示（不带名字）
+     *    - 其他玩家收到“玩家名 + 动作”的广播
+     * 2. ACTION_REJECTED：
+     *    - 只发给操作者
+     * </p>
+     *
+     * @param playerId    动作发起玩家ID
+     * @param gameResult  动作处理结果
+     */
+    private static void broadcastResult(Integer playerId, GameResult gameResult) {
+        if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED) {
+            // 操作者收到私有提示
+            broadcast(playerId, gameResult.getMessage());
+
+            // 其他玩家收到带操作者名字的提示
+            if (playerId >= 1 && playerId <= PLAYERS.size()) {
+                broadcast(PLAYERS.get(playerId - 1).getName() + " " + gameResult.getMessage(), playerId);
             }
-            if (gameResult.getEventType() == GameEventType.ACTION_REJECTED) {
-                broadcast(playerId, gameResult.getMessage());
-            }
-
-            // 打印处理后的房间状态
-            System.out.println(gameResult.getMessage());
-            System.out.println("处理后阶段: " + currentRoom.getCurrentPhase());
-            System.out.println("处理后当前操作人: " + currentRoom.getCurrentPlayerId());
-            System.out.println("处理后地主: " + currentRoom.getLandlordPlayerId());
-            System.out.println("第一个叫地主ID"+currentRoom.getFirstCallerId());
-            System.out.println("不抢地主次数");
-            System.out.println("不叫地主次数"+currentRoom.getCallPassCount());
-            System.out.println("----------");
-
-
-
-
-            // 地主已经确定，可以结束当前流程
-            if (gameResult.getEventType() == GameEventType.LANDLORD_DECIDED) {
-                broadcast("地主已确定: 玩家 " + currentRoom.getLandlordPlayerId());
-                broadcast("地主底牌"+ CardUtil.cardsToString(currentRoom.getHoleCards()));
-
-                sendOpeningHands(currentRoom);
-                System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
-                return;
-            }
-
-            //重开
-            if (gameResult.getEventType() == GameEventType.REDEAL_REQUIRED){
-                currentRoom = GAME_FLOW.reDeal(currentRoom);
-                sendOpeningHands(currentRoom);
-                System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
-                continue;
-            }
-
-            //出牌阶段
-            if (currentRoom.getCurrentPhase() ==GamePhase.PLAYING){
-
-            }
-            //结束阶段
-            if (currentRoom.getCurrentPhase() ==GamePhase.SETTLE){
-                //地主赢了
-//                if (){
-//
-//                }
-            }
-
-            // 不 return，不 break，继续 while
-            // 下一轮会重新读取 currentRoom.getCurrentPhase()
-            // 如果外部逻辑已改成 ROB_LANDLORD，就会自动给下一位发“抢地主”
+        } else if (gameResult.getEventType() == GameEventType.ACTION_REJECTED) {
+            // 非法操作只提示操作者本人
+            broadcast(playerId, gameResult.getMessage());
         }
     }
 

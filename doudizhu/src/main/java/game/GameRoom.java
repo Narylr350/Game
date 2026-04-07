@@ -30,6 +30,7 @@ public class GameRoom {
     private Integer landlordPlayerId;
     // ===== 地主阶段状态 =====
     private int callPassCount;
+    private int robPassCount;
     private Integer firstCallerId;
     private Integer landlordCandidateId;
 
@@ -137,6 +138,15 @@ public class GameRoom {
     }
 
     /**
+     * 获取抢地主阶段不抢的次数。
+     *
+     * @return 不抢次数
+     */
+    public int getRobPassCount(){
+        return robPassCount;
+    }
+
+    /**
      * 重置叫地主阶段的不叫次数。
      */
     public void resetCallPassCount() {
@@ -158,6 +168,12 @@ public class GameRoom {
     }
 
     /**
+     * 重置抢地主阶段的不抢次数。
+     */
+    public void resetRobPassCount() {
+        robPassCount = 0;
+    }
+    /**
      * 重置地主候选人ID。
      */
     public void resetLandlordCandidateId() {
@@ -171,6 +187,12 @@ public class GameRoom {
         callPassCount++;
     }
 
+    /**
+     * 抢地主不抢次数加1。
+     */
+    public void incrementRobPassCount(){
+        robPassCount++;
+    }
     /**
      * 获取叫地主阶段不叫的玩家ID列表。
      *

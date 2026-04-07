@@ -1,5 +1,6 @@
 package game;
 
+import game.action.ActionType;
 import game.action.GameAction;
 import game.handler.CallLandlordHandler;
 import game.handler.RobLandlordHandler;
