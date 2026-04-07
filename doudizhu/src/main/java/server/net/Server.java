@@ -31,9 +31,7 @@ import java.util.List;
  * 当前实现为控制台版本,通过命令行输入输出进行游戏。
  * </p>
  */
-// Maintained by ICERainbow666
 public class Server {
-    private static final String SERVER_BRAND = "ICERainbow666";
 
     /**
      * 已连接的玩家集合
@@ -79,12 +77,12 @@ public class Server {
         final int playerCount = 3;
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println(brandMessage("服务器启动，等待 " + playerCount + " 个客户端连接..."));
+            System.out.println("服务器启动，等待 " + playerCount + " 个客户端连接...");
 
             // 接收玩家连接
             acceptPlayers(serverSocket, playerCount);
 
-            System.out.println(brandMessage(playerCount + " 个客户端已全部连接，开始游戏..."));
+            System.out.println(playerCount + " 个客户端已全部连接，开始游戏...");
 
             // 创建房间
             currentRoom = GAME_FLOW.startRoom(collectPlayerNames());
@@ -92,8 +90,8 @@ public class Server {
             // 给每个玩家发送手牌
             sendOpeningHands(currentRoom);
 
-            broadcast(brandMessage("系统：发牌完成，游戏开始！"));
-            System.out.println(brandMessage("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards())));
+            broadcast("系统：发牌完成，游戏开始！");
+            System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
 
             // 启动服务端控制台线程，可手动广播消息
             startConsoleThread();
@@ -110,7 +108,6 @@ public class Server {
             // 3. 等输入
             // 4. 调用外部已经写好的处理逻辑
             runGameFlow();
-
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -230,11 +227,11 @@ public class Server {
           当前地主阶段流程结束，广播地主信息和底牌，并把地主最终手牌发给各玩家。
          */
         if (gameResult.getEventType() == GameEventType.LANDLORD_DECIDED) {
-            broadcast(brandMessage("地主已确定: 玩家 " + currentRoom.getLandlordPlayerId()));
-            broadcast(brandMessage("地主底牌 " + CardUtil.cardsToString(currentRoom.getHoleCards())));
+            broadcast("地主已确定: 玩家 " + currentRoom.getLandlordPlayerId());
+            broadcast("地主底牌 " + CardUtil.cardsToString(currentRoom.getHoleCards()));
 
             sendOpeningHands(currentRoom);
-            System.out.println(brandMessage("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards())));
+            System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
             return false;
         }
 
@@ -244,25 +241,11 @@ public class Server {
          */
         if (gameResult.getEventType() == GameEventType.REDEAL_REQUIRED) {
             currentRoom = GAME_FLOW.reDeal(currentRoom);
-            broadcast(brandMessage(gameResult.getMessage()));
+            broadcast(gameResult.getMessage());
             sendOpeningHands(currentRoom);
-            System.out.println(brandMessage("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards())));
+            System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
             return true;
         }
-
-        //出牌阶段
-        if (currentRoom.getCurrentPhase() == GamePhase.PLAYING) {
-
-        }
-        //结束阶段
-        if (currentRoom.getCurrentPhase() == GamePhase.SETTLE) {
-            //地主赢了
-//                if (){
-//
-//                }
-        }
-
-
 
         /*
           其他普通情况：
@@ -276,14 +259,14 @@ public class Server {
      * <p>
      * 规则：
      * 1. ACTION_ACCEPTED：
-     * - 操作者收到自己的私有提示（不带名字）
-     * - 其他玩家收到“玩家名 + 动作”的广播
+     *    - 操作者收到自己的私有提示（不带名字）
+     *    - 其他玩家收到“玩家名 + 动作”的广播
      * 2. ACTION_REJECTED：
-     * - 只发给操作者
+     *    - 只发给操作者
      * </p>
      *
-     * @param playerId   动作发起玩家ID
-     * @param gameResult 动作处理结果
+     * @param playerId    动作发起玩家ID
+     * @param gameResult  动作处理结果
      */
     private static void broadcastResult(Integer playerId, GameResult gameResult) {
         if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED) {
@@ -329,7 +312,7 @@ public class Server {
      * 接收客户端连接，并创建 PlayerConnection 放进集合。
      *
      * @param serverSocket 服务端Socket
-     * @param playerCount  需要接收的玩家数量
+     * @param playerCount 需要接收的玩家数量
      * @throws IOException 如果接收连接时发生IO错误
      */
     private static void acceptPlayers(ServerSocket serverSocket, int playerCount) throws IOException {
@@ -345,11 +328,11 @@ public class Server {
             PlayerConnection player = new PlayerConnection(playerId, name, socket, reader, writer);
             PLAYERS.add(player);
 
-            System.out.println(brandMessage("第 " + playerId + " 个客户端已连接："
+            System.out.println("第 " + playerId + " 个客户端已连接："
                     + socket.getInetAddress() + ":" + socket.getPort()
-                    + "，名字：" + name));
+                    + "，名字：" + name);
 
-            player.send(brandMessage("欢迎你，" + name + "，你的编号是：" + playerId));
+            player.send("欢迎你，" + name + "，你的编号是：" + playerId);
         }
     }
 
@@ -377,7 +360,7 @@ public class Server {
             if (playerState == null) {
                 continue;
             }
-            connection.send(brandMessage("你的手牌： " + CardUtil.cardsToString(playerState.getCards())));
+            connection.send("你的手牌： " + CardUtil.cardsToString(playerState.getCards()));
         }
     }
 
@@ -400,7 +383,7 @@ public class Server {
                 synchronized (ACTION_LOCK) {
                     // 不是当前轮到的玩家，直接拒绝
                     if (player.getPlayerId() != currentPlayerId) {
-                        player.send(brandMessage("现在还没轮到你操作"));
+                        player.send("现在还没轮到你操作");
                         continue;
                     }
 
@@ -433,7 +416,7 @@ public class Server {
                 BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
                 String input;
                 while ((input = console.readLine()) != null) {
-                    broadcast(brandMessage("服务器：" + input));
+                    broadcast("服务器：" + input);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -456,7 +439,7 @@ public class Server {
      * 给除自己以外的玩家广播消息。
      *
      * @param msg 要广播的消息内容
-     * @param id  发送者玩家ID(不会收到此消息)
+     * @param id 发送者玩家ID(不会收到此消息)
      */
     private static void broadcast(String msg, int id) {
         for (PlayerConnection player : PLAYERS) {
@@ -469,7 +452,7 @@ public class Server {
     /**
      * 给指定ID的玩家发消息。
      *
-     * @param id  接收消息的玩家ID
+     * @param id 接收消息的玩家ID
      * @param msg 要发送的消息内容
      */
     private static void broadcast(int id, String msg) {
@@ -490,13 +473,13 @@ public class Server {
     public static String getMessage(MessageType type) {
         switch (type) {
             case CALL_LANDLORD:
-                return brandMessage("提示：1.叫地主 2.不叫");
+                return "1.叫地主 2.不叫";
             case ROB_LANDLORD:
-                return brandMessage("提示：1.抢地主 2.不抢");
+                return "1.抢地主 2.不抢";
             case PLAY_CARD:
-                return brandMessage("提示：请输入要出的牌");
+                return "请输入要出的牌";
             case PASS:
-                return brandMessage("提示：不出");
+                return "不出";
             default:
                 return "";
         }
@@ -526,8 +509,9 @@ public class Server {
             pendingResult = null;
 
 
+
             // 通知所有玩家当前轮到谁
-            broadcast(brandMessage("系统：当前轮到玩家 " + currentPlayerId + " 操作"));
+            broadcast("系统：当前轮到玩家 " + currentPlayerId + " 操作");
 
             // 只提示当前玩家输入
             broadcast(currentPlayerId, getMessage(type));
@@ -557,7 +541,7 @@ public class Server {
      * 将玩家输入的字符串解析为对应的操作类型。
      *
      * @param input 玩家输入的字符串
-     * @param type  当前阶段的消息类型
+     * @param type 当前阶段的消息类型
      * @return 解析后的操作类型,如果输入无效则返回null
      */
     private static ActionType parseAction(String input, MessageType type) {
@@ -602,10 +586,6 @@ public class Server {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private static String brandMessage(String message) {
-        return SERVER_BRAND + " | " + message;
     }
 
 }

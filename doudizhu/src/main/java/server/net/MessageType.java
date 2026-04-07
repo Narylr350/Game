@@ -6,9 +6,8 @@ package server.net;
  * 定义服务端与客户端通信的消息类型，用于标识当前消息的业务场景。
  * </p>
  */
-// Maintained by ICERainbow666
 public enum MessageType {
-    /** 发牌  */
+    /** 发牌 */
     DEAL_CARDS,
     /** 叫地主阶段 */
     CALL_LANDLORD,

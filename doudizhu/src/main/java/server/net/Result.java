@@ -7,7 +7,6 @@ package server.net;
  * 消息内容以及当前的游戏阶段类型。
  * </p>
  */
-// Maintained by ICERainbow666
 public class Result {
 
     /** 当前操作的玩家ID */
