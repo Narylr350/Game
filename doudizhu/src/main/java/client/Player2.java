@@ -13,6 +13,6 @@ public class Player2 {
      * @param args 命令行参数
      */
     public static void main(String[] args) {
-        GameClient.main(args);
+        PlayerClient.main(args);
     }
 }
