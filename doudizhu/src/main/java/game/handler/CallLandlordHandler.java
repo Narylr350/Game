@@ -7,8 +7,21 @@ import game.action.ActionType;
 import game.action.GameAction;
 import rule.LandlordRule;
 
+/**
+ * 叫地主阶段处理器。
+ * <p>
+ * 负责处理玩家在叫地主阶段的操作，包括叫地主和不叫两种选择。
+ * </p>
+ */
 public class CallLandlordHandler {
 
+    /**
+     * 处理叫地主阶段的玩家动作。
+     *
+     * @param room 游戏房间对象
+     * @param action 玩家动作
+     * @return 处理结果
+     */
     public GameResult handle(GameRoom room, GameAction action) {
         int playerId = action.getPlayerId();
         ActionType actionType = action.getType();
@@ -30,16 +43,17 @@ public class CallLandlordHandler {
             room.setLandlordCandidateId(currentPlayerId);
             room.setFirstCallerId(currentPlayerId);
             room.setCurrentPhase(GamePhase.ROB_LANDLORD);
-            room.setCurrentPlayerId(nextPlayerId(currentPlayerId));
+            room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
             return GameResult.accepted("叫地主成功", room.getCurrentPlayerId());
         }
 
         if (ActionType.PASS == actionType) {
             room.addCallPassPlayerId(currentPlayerId);
-            room.setCurrentPlayerId(nextPlayerId(currentPlayerId));
+            room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
             room.incrementCallPassCount();
 
             if (room.getCallPassCount() == 3) {
+                room.resetCallPassCount();
                 return GameResult.redealRequired("");
             }
 
@@ -47,12 +61,5 @@ public class CallLandlordHandler {
         }
 
         return GameResult.rejected("当前操作无效", playerId);
-    }
-
-    private Integer nextPlayerId(Integer currentPlayerId) {
-        if (currentPlayerId.equals(3)) {
-            return 1;
-        }
-        return currentPlayerId + 1;
     }
 }

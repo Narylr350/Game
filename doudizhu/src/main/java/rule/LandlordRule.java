@@ -27,19 +27,19 @@ public class LandlordRule {
      * @return 如果满足所有条件则返回true,否则返回false
      */
     public static Boolean canCallLandlord(GameRoom room) {
-        //房间不能为空
+        // 房间不能为空
         if (room == null) {
             return false;
         }
-        //当前阶段必须是地主阶段
-        if (room.getCurrentPhase() != GamePhase.CALL_LANDLORD && room.getCurrentPhase() != GamePhase.ROB_LANDLORD) {//@Rainbwo
+        // 当前阶段必须是叫地主或抢地主阶段
+        if (room.getCurrentPhase() != GamePhase.CALL_LANDLORD && room.getCurrentPhase() != GamePhase.ROB_LANDLORD) {
             return false;
         }
-        //玩家不能为空
+        // 玩家列表不能为空
         if (room.getPlayers() == null) {
             return false;
         }
-        //不能有地主
+        // 不能有已确定的地主
         for (PlayerState player : room.getPlayers()) {
             if (player.isLandlord()) {
                 return false;

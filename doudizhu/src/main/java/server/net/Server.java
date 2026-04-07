@@ -138,8 +138,6 @@ public class Server {
                 System.out.println("当前阶段没有对应提示类型，流程结束。当前阶段：" + currentRoom.getCurrentPhase());
                 return;
             }
-//            MessageType messageType = currentWaitingMessageType;
-
 
             // 给当前玩家发提示，并等待他的输入
             Result result = waitPlayerAction(playerId, messageType);
@@ -173,16 +171,19 @@ public class Server {
             }
 
             // 广播外部逻辑返回的消息
-            if (gameResult.getEventType() ==GameEventType.ACTION_ACCEPTED) {
-                broadcast(playerId,gameResult.getMessage());
-                broadcast(PLAYERS.get(playerId-1).getName()+gameResult.getMessage(),playerId);
+            if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED) {
+                // 操作者收到私有提示
+                broadcast(playerId, gameResult.getMessage());
+                // 其他玩家收到带操作者名字的提示
+                if (playerId >= 1 && playerId <= PLAYERS.size()) {
+                    broadcast(PLAYERS.get(playerId - 1).getName() + gameResult.getMessage(), playerId);
+                }
             }
-            if (gameResult.getEventType() ==GameEventType.ACTION_REJECTED){
-                broadcast(playerId,gameResult.getMessage());
+            if (gameResult.getEventType() == GameEventType.ACTION_REJECTED) {
+                broadcast(playerId, gameResult.getMessage());
             }
 
-//            processingStatus(result,currentRoom);
-            // 打印处理后的房间状态，确认有没有切到抢地主
+            // 打印处理后的房间状态
             System.out.println(gameResult.getMessage());
             System.out.println("处理后阶段: " + currentRoom.getCurrentPhase());
             System.out.println("处理后当前操作人: " + currentRoom.getCurrentPlayerId());
@@ -202,7 +203,7 @@ public class Server {
                 currentRoom = GAME_FLOW.reDeal(currentRoom);
                 sendOpeningHands(currentRoom);
                 System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
-
+                continue;
             }
 
             // 不 return，不 break，继续 while
@@ -314,12 +315,6 @@ public class Server {
                         player.send("现在还没轮到你操作");
                         continue;
                     }
-//
-//                    // 空输入不处理
-//                    if (msg.isEmpty()) {
-//                        player.send("输入不能为空");
-//                        continue;
-//                    }
 
                     // 记录当前玩家输入
                     pendingResult = new Result(player.getPlayerId(), msg, currentWaitingMessageType);
@@ -334,6 +329,9 @@ public class Server {
         } catch (Exception e) {
             System.out.println(player.getName() + " 连接异常");
             e.printStackTrace();
+        } finally {
+            PLAYERS.removeIf(p -> p.getPlayerId() == player.getPlayerId());
+            System.out.println(player.getName() + " 已从房间移除");
         }
     }
 
