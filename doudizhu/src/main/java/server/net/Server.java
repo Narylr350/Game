@@ -177,7 +177,7 @@
  
              System.out.println("收到玩家 " + result.getPlayerId() + " 输入：" + result.getMessage());
  
-             ActionType actionType = parseAction(result.getMessage(), messageType);
+             ActionType actionType = ActionType.parseAction(result.getMessage(), messageType);
              GameAction action = new GameAction(result.getPlayerId(), actionType, null);
  
              System.out.println("阶段: " + currentRoom.getCurrentPhase());
@@ -536,56 +536,4 @@
              return result;
          }
      }
- 
-     /**
-      * 将玩家输入的字符串解析为对应的操作类型。
-      *
-      * @param input 玩家输入的字符串
-      * @param type 当前阶段的消息类型
-      * @return 解析后的操作类型,如果输入无效则返回null
-      */
-     private static ActionType parseAction(String input, MessageType type) {
-         if (input == null || type == null) {
-             return null;
-         }
- 
-         input = input.trim();
- 
-         switch (type) {
-             case CALL_LANDLORD:
-                 if ("1".equals(input) || "叫".equals(input) || "叫地主".equals(input)) {
-                     return ActionType.CALL;
-                 }
-                 if ("2".equals(input) || "不叫".equals(input)) {
-                     return ActionType.PASS;
-                 }
-                 break;
- 
-             case ROB_LANDLORD:
-                 if ("1".equals(input) || "抢".equals(input) || "抢地主".equals(input)) {
-                     return ActionType.CALL;
-                 }
-                 if ("2".equals(input) || "不抢".equals(input)) {
-                     return ActionType.PASS;
-                 }
-                 break;
-         }
- 
-         return null;
-     }
- 
-     /**
-      * 清空控制台。
-      * <p>
-      * 使用系统命令cls来清空控制台输出(仅Windows系统)。
-      * </p>
-      */
-     public static void clearConsole() {
-         try {
-             new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-         } catch (Exception e) {
-             e.printStackTrace();
-         }
-     }
- 
  }
