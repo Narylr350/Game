@@ -1,5 +1,7 @@
 package game.action;
 
+import server.net.MessageType;
+
 /**
  * 叫地主/抢地主动作类型枚举。
  * <p>
@@ -9,47 +11,48 @@ package game.action;
 public enum ActionType {
 
     /** 叫地主/抢地主 */
-    CALL("叫"),
+    CALL,
     /** 不叫/不抢 */
-    PASS("不叫");
-
-    private final String text;
-
-    ActionType(String text) {
-        this.text = text;
-    }
-
+    PASS,
+    /** 出牌 */
+    PLAY_CARD,
+    /** 不出牌 */
+    PASS_CARD;
     /**
-     * 从玩家输入的字符串解析为动作类型。
-     * <p>
-     * 支持精确匹配显示文本（如"叫"、"不叫"），忽略首尾空格。
-     * </p>
+     * 解析玩家输入的动作字符串，转换为对应的ActionType枚举值。
      *
-     * @param input 玩家输入的字符串
-     * @return 匹配的动作类型，未匹配返回null
+     * @param input 玩家输入的动作字符串
+     * @param type 当前消息类型，用于判断是叫地主还是抢地主阶段
+     * @return 对应的ActionType枚举值，如果无法解析则返回null
      */
-    public static ActionType fromString(String input) {
-        if (input == null) {
+    public static ActionType parseAction(String input, MessageType type) {
+        if (input == null || type == null) {
             return null;
         }
 
         input = input.trim();
 
-        for (ActionType type : ActionType.values()) {
-            if (type.text.equals(input)) {
-                return type;
-            }
+        switch (type) {
+            case CALL_LANDLORD:
+                if ("1".equals(input) || "叫".equals(input) || "叫地主".equals(input)) {
+                    return CALL;
+                }
+                if ("2".equals(input) || "不叫".equals(input)) {
+                    return PASS;
+                }
+                break;
+
+            case ROB_LANDLORD:
+                if ("1".equals(input) || "抢".equals(input) || "抢地主".equals(input)) {
+                    return CALL;
+                }
+                if ("2".equals(input) || "不抢".equals(input)) {
+                    return PASS;
+                }
+                break;
+
         }
 
         return null;
-    }
-
-    /**
-     * 获取动作的显示文本。
-     *
-     * @return 动作的中文显示文本
-     */
-    public String getText() {
-        return text;
     }
 }
