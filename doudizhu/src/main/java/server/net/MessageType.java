@@ -17,8 +17,8 @@
      PLAY_CARD,
      /** 不出/过牌 */
      PASS,
-     /** 出牌错误 */
-     ERROR,
+     /** 游戏结束 */
+     GAME_OVER,
      /** 系统消息 */
      SYSTEM
  }

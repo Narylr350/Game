@@ -61,7 +61,7 @@
      /**
       * 当前正在等待的消息类型：叫地主 / 抢地主 / 出牌
       */
-     private static volatile MessageType currentWaitingMessageType = null;
+     private static volatile GamePhase currentWaitingMessageType = null;
  
      /**
       * 服务端主方法。
@@ -156,7 +156,7 @@
                  continue;
              }
  
-             MessageType messageType = resolveCurrentMessageType(currentRoom);
+             GamePhase messageType = currentRoom.getCurrentPhase();
              if (messageType == null) {
                  System.out.println("当前阶段没有对应提示类型，流程结束。当前阶段：" + currentRoom.getCurrentPhase());
                  return;
@@ -470,16 +470,13 @@
       * @param type 消息类型枚举
       * @return 对应的提示文本
       */
-     public static String getMessage(MessageType type) {
+     public static String getMessage(GamePhase type) {
          switch (type) {
              case CALL_LANDLORD:
                  return "1.叫地主 2.不叫";
              case ROB_LANDLORD:
                  return "1.抢地主 2.不抢";
-             case PLAY_CARD:
-                 return "请输入要出的牌";
-             case PASS:
-                 return "不出";
+
              default:
                  return "";
          }
@@ -497,7 +494,7 @@
       * @param type     当前等待的消息类型
       * @return 玩家输入的结果对象,如果等待失败则返回null
       */
-     public static Result waitPlayerAction(int playerId, MessageType type) {
+     public static Result waitPlayerAction(int playerId, GamePhase type) {
          synchronized (ACTION_LOCK) {
              // 设置当前轮到的玩家
              currentPlayerId = playerId;

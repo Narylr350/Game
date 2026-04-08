@@ -1,5 +1,7 @@
  package server.net;
- 
+
+ import game.GamePhase;
+
  /**
   * 网络通信结果类。
   * <p>
@@ -14,7 +16,7 @@
      /** 消息内容 */
      String message;
      /** 当前游戏阶段类型 */
-     MessageType currentStatus;
+     GamePhase currentStatus;
  
      /**
       * 创建网络通信结果对象。
@@ -23,7 +25,7 @@
       * @param msg 消息内容
       * @param currentStatus 当前游戏阶段类型
       */
-     public Result(int playerId, String msg, MessageType currentStatus) {
+     public Result(int playerId, String msg, GamePhase currentStatus) {
          this.currentID = playerId;
          this.message = msg;
          this.currentStatus = currentStatus;
@@ -61,7 +63,7 @@
       *
       * @return 消息类型枚举
       */
-     public MessageType getMessageType() {
+     public GamePhase getMessageType() {
          return currentStatus;
      }
  
@@ -79,7 +81,7 @@
       *
       * @param currentStatus 消息类型枚举
       */
-     public void setCurrentStatus(MessageType currentStatus) {
+     public void setCurrentStatus(GamePhase currentStatus) {
          this.currentStatus = currentStatus;
      }
  }

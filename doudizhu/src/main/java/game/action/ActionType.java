@@ -1,5 +1,6 @@
 package game.action;
 
+import game.GamePhase;
 import server.net.MessageType;
 
 /**
@@ -25,7 +26,7 @@ public enum ActionType {
      * @param type 当前消息类型，用于判断是叫地主还是抢地主阶段
      * @return 对应的ActionType枚举值，如果无法解析则返回null
      */
-    public static ActionType parseAction(String input, MessageType type) {
+    public static ActionType parseAction(String input, GamePhase type) {
         if (input == null || type == null) {
             return null;
         }

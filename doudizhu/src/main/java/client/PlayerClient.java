@@ -13,6 +13,7 @@ import java.util.Scanner;
  * </p>
  */
 public class PlayerClient {
+    static Scanner input = new Scanner(System.in);
     /**
      * 客户端主方法。
      * <p>
@@ -29,8 +30,18 @@ public class PlayerClient {
         final int port = 8888;
 
         try {
+
+//            inputselect();
             System.out.println("请输入名字");
             String name = scanner.nextLine();
+
+//            System.out.println("密码");
+//            String password = scanner.nextLine();
+
+            //登录or注册
+            while (true){
+                break;
+            }
 
             Socket socket = new Socket(host, port);
             System.out.println("已经连接服务器");
@@ -77,5 +88,27 @@ public class PlayerClient {
                 e.printStackTrace();
             }
         }).start();
+    }
+    public static void inputselect(){
+
+        while (true){
+            System.out.println("1.登录 2.注册 3.exit");
+            String select = input.nextLine();
+            if ("1".equals(select)){
+                //进入登录
+                System.out.println("进入登录页面");
+            }
+            else if ("2".equals(select)){
+                //进入注册
+                System.out.println("进入注册页面");
+            }
+            else if ("3".equals(select)||"exit".equals(select)){
+                //退出程序
+                System.exit(0);
+            }
+            else {
+                System.out.println("重新选择");
+            }
+        }
     }
 }
