@@ -22,8 +22,8 @@ public class GameRoom {
     private final List<PlayerState> playerStates;
     private final TreeSet<Integer> holeCards;
     // ===== 阶段状态 =====
-    private final PlayState playState;
     private final LandlordState landlordState;
+    private final PlayState playState;
     // ===== 流程状态 =====
     private GamePhase currentPhase;
     private Integer currentPlayerId;
@@ -40,8 +40,8 @@ public class GameRoom {
         this.playerStates = new ArrayList<>(players);
         this.holeCards = new TreeSet<>(holeCards);
         // 阶段初始化
-        this.playState = new PlayState();
         this.landlordState = new LandlordState();
+        this.playState = new PlayState();
         // 流程初始化
         this.currentPhase = GamePhase.WAITING;
     }

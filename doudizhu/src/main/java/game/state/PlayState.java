@@ -23,6 +23,10 @@ public class PlayState {
      */
     private int passCount;
 
+    private Integer highestCardPlayerId;
+
+    private Integer  highestCardCandidateId;
+
     /**
      * 获取上一手出牌的玩家ID。
      *

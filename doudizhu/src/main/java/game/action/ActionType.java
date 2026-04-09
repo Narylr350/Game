@@ -1,7 +1,6 @@
 package game.action;
 
 import game.GamePhase;
-import server.net.MessageType;
 
 /**
  * 叫地主/抢地主动作类型枚举。
