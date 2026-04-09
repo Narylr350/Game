@@ -5,6 +5,8 @@ import game.GameResult;
 import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
+import game.state.LandlordState;
+
 import java.util.List;
 
 /**
@@ -29,32 +31,33 @@ public class RobLandlordHandler {
      * @return 处理结果
      */
     public GameResult handle(GameRoom room, GameAction action) {
-        Integer currentPlayerId = room.getCurrentPlayerId();
-        int playerId = action.getPlayerId();
+        LandlordState landlordState = room.getLandlordState();
+        final int playerId = action.getPlayerId();
+        int currentPlayerId = room.getCurrentPlayerId();
         ActionType actionType = action.getType();
 
         if (actionType == null) {
             return GameResult.rejected("你在干赣神魔", playerId);
         }
 
-        if (currentPlayerId == null || !currentPlayerId.equals(playerId)) {
+        if (currentPlayerId != playerId) {
             return GameResult.rejected("是你吗你就叫", playerId);
         }
 
         // 叫地主阶段已经不叫的玩家，在抢地主阶段强制PASS
-        List<Integer> callPassPlayerIds = room.getCallPassPlayerIds();
+        List<Integer> callPassPlayerIds = landlordState.getCallPassPlayerIds();
         if (callPassPlayerIds.contains(currentPlayerId)) {
             actionType = ActionType.PASS;
         }
 
         // 抢地主
         if (ActionType.CALL == actionType) {
-            room.setLandlordCandidateId(currentPlayerId);
+            landlordState.setLandlordCandidateId(currentPlayerId);
             room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
 
             // 如果下一位已经回到 firstCaller，说明这一轮表态结束，直接确认地主
-            if (room.getCurrentPlayerId().equals(room.getFirstCallerId())) {
-                Integer landlordId = room.getLandlordCandidateId();
+            if (room.getCurrentPlayerId().equals(landlordState.getFirstCallerId())) {
+                int landlordId = landlordState.getLandlordCandidateId();
                 gameFlow.confirmLandlord(room, landlordId);
                 return GameResult.landlordDecided("地主确认：玩家 " + landlordId);
             }
@@ -67,8 +70,8 @@ public class RobLandlordHandler {
             room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
 
             // 如果下一位已经回到 firstCaller，说明这一轮表态结束，直接确认地主
-            if (room.getCurrentPlayerId().equals(room.getFirstCallerId())) {
-                Integer landlordId = room.getLandlordCandidateId();
+            if (room.getCurrentPlayerId().equals(landlordState.getFirstCallerId())) {
+                int landlordId = landlordState.getLandlordCandidateId();
                 gameFlow.confirmLandlord(room, landlordId);
                 return GameResult.landlordDecided("地主确认：玩家 " + landlordId);
             }

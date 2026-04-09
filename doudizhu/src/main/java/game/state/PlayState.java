@@ -10,11 +10,17 @@ import java.util.List;
  * </p>
  */
 public class PlayState {
-    /** 上一手出牌的玩家ID */
+    /**
+     * 上一手出牌的玩家ID
+     */
     private Integer lastPlayPlayerId;
-    /** 上一手打出的牌 */
+    /**
+     * 上一手打出的牌
+     */
     private List<Integer> lastPlayedCards;
-    /** 连续过牌次数 */
+    /**
+     * 连续过牌次数
+     */
     private int passCount;
 
     /**

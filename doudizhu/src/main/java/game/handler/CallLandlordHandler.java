@@ -6,7 +6,8 @@ import game.GameResult;
 import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
-import rule.LandlordRule;
+import game.state.LandlordState;
+import rule.LandlordRuleChecker;
 
 /**
  * 叫地主阶段处理器。
@@ -30,33 +31,32 @@ public class CallLandlordHandler {
      * @return 处理结果
      */
     public GameResult handle(GameRoom room, GameAction action) {
-        Integer currentPlayerId = room.getCurrentPlayerId();
-        int playerId = action.getPlayerId();
+        LandlordState landlordState = room.getLandlordState();
+        final int playerId = action.getPlayerId();
+        final int currentPlayerId = room.getCurrentPlayerId();
         ActionType actionType = action.getType();
 
-        if (!LandlordRule.canCallLandlord(room)) {
-            return GameResult.rejected("不能叫地主");
-        }
+        LandlordRuleChecker.validateCanCallLandlord(room);
 
         if (actionType == null) {
             return GameResult.rejected("你在干赣神魔", playerId);
         }
 
-        if (currentPlayerId == null || currentPlayerId != playerId) {
+        if (currentPlayerId != playerId) {
             return GameResult.rejected("是你吗你就抢", playerId);
         }
 
         // 叫地主
         if (ActionType.CALL == actionType) {
-            room.setLandlordCandidateId(currentPlayerId);
+            landlordState.setLandlordCandidateId(currentPlayerId);
 
             // 前两家都不叫，最后一家叫，直接确认地主
-            if (room.getCallPassCount() == 2) {
+            if (landlordState.getCallPassCount() == 2) {
                 gameFlow.confirmLandlord(room, currentPlayerId);
                 return GameResult.landlordDecided("地主确认：玩家 " + currentPlayerId);
             }
 
-            room.setFirstCallerId(currentPlayerId);
+            landlordState.setFirstCallerId(currentPlayerId);
             room.setCurrentPhase(GamePhase.ROB_LANDLORD);
             room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
             return GameResult.accepted("叫地主");
@@ -64,13 +64,13 @@ public class CallLandlordHandler {
 
         // 不叫
         if (ActionType.PASS == actionType) {
-            room.addCallPassPlayerId(currentPlayerId);
+            landlordState.addCallPassPlayerId(currentPlayerId);
             room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
-            room.incrementCallPassCount();
+            landlordState.incrementCallPassCount();
 
             // 三人都不叫，重开
-            if (room.getCallPassCount() == 3) {
-                room.resetLandlordPhaseState();
+            if (landlordState.getCallPassCount() == 3) {
+                landlordState.resetLandlordPhaseState();
                 room.setCurrentPhase(GamePhase.DEALING);
                 return GameResult.redealRequired("三人都不叫地主，重新发牌");
             }

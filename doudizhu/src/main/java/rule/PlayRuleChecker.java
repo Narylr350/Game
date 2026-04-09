@@ -1,5 +1,6 @@
 package rule;
 
+import game.GamePhase;
 import game.GameRoom;
 
 import java.util.List;
@@ -16,25 +17,22 @@ import java.util.List;
  */
 public class PlayRuleChecker {
     /**
-     * 判断玩家是否可以出指定的牌。
-     * <p>
-     * 当前阶段的校验规则:
-     * <ul>
-     *   <li>房间对象不能为空</li>
-     *   <li>玩家必须在房间内(能通过playerId找到)</li>
-     *   <li>要打出的牌组不能为空</li>
-     * </ul>
-     * </p>
+     * 验证玩家是否可以出牌。
      *
-     * @param room     游戏房间对象
-     * @param playerId 要出牌的玩家ID
-     * @param cards    要打出的牌组
-     * @return 如果满足所有基础条件则返回true,否则返回false
+     * 该方法用于检查当前游戏房间状态和阶段，以确定指定玩家是否可以进行出牌操作。
+     * 目前仅检查房间是否为空以及当前阶段是否为PLAYING。后续版本将增加更多合法性校验。
+     *
+     * @param room 游戏房间对象，不能为空
+     * @param playerId 玩家ID，必须是房间中的有效玩家
+     * @param cards 出牌的牌组列表，不能为空
+     * @throws IllegalStateException 如果房间为空或当前阶段不是PLAYING
      */
-    public boolean canPlay(GameRoom room, int playerId, List<Integer> cards) {
-        return room != null
-                && room.getPlayerById(playerId) != null
-                && cards != null
-                && !cards.isEmpty();
+    public static void validateCanPlay(GameRoom room, int playerId, List<Integer> cards) {
+        if (room == null){
+            throw new IllegalStateException("房间不能为空");
+        }
+        if (GamePhase.PLAYING != room.getCurrentPhase()){
+            throw new IllegalStateException("只能为PLAYING阶段");
+        }
     }
 }

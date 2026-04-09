@@ -1,8 +1,8 @@
 package game;
 
-import game.action.ActionType;
 import game.action.GameAction;
 import game.handler.CallLandlordHandler;
+import game.handler.PlayingHandler;
 import game.handler.RobLandlordHandler;
 import game.state.PlayerState;
 import util.CardUtil;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.TreeSet;
 
-import static rule.NameRule.validatePlayerNames;
+import static rule.NameRuleChecker.validatePlayerNames;
 
 /**
  * 游戏流程管理类。
@@ -25,10 +25,12 @@ public class GameFlow {
 
     private final CallLandlordHandler callLandlordHandler;
     private final RobLandlordHandler robLandlordHandler;
+    private final PlayingHandler playingHandler;
 
     public GameFlow() {
         this.callLandlordHandler = new CallLandlordHandler(this);
         this.robLandlordHandler = new RobLandlordHandler(this);
+        this.playingHandler = new PlayingHandler();
     }
 
     /**
@@ -70,7 +72,7 @@ public class GameFlow {
         }
 
         if (currentPhase == GamePhase.PLAYING) {
-            return GameResult.rejected("出牌阶段暂未实现");
+            return playingHandler.handle(room, action);
         }
 
         return GameResult.rejected("当前阶段禁止操作");
@@ -134,9 +136,7 @@ public class GameFlow {
      * @return 发牌结果，包含所有玩家手牌和底牌
      */
     public DealResult deal(List<String> playerNames) {
-        if (!validatePlayerNames(playerNames)){
-            throw new IllegalArgumentException("名字不合法");
-        }
+        validatePlayerNames(playerNames);
         List<Integer> shuffledDeck = CardUtil.createShuffledDeck();
         List<TreeSet<Integer>> hands = new ArrayList<>();
         TreeSet<Integer> holeCards = new TreeSet<>();

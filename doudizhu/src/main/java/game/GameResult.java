@@ -51,7 +51,7 @@ public class GameResult {
      */
     public static GameResult rejected(String message, Integer sendToPlayerId) {
         return new GameResult(
-                false,
+                    false,
                 message,
                 GameEventType.ACTION_REJECTED,
                 sendToPlayerId);
