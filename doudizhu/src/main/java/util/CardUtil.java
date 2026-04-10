@@ -126,7 +126,7 @@ public final class CardUtil {
         }
         cards = cards.toUpperCase().trim().replace(" ", "");
         for (int i = 0; i < cards.length(); i++) {
-            if (!String.valueOf(cards.charAt(i)).matches("^([3-9]|10|J|Q|K|A|2|大王|小王)$")) {
+            if (!String.valueOf(cards.charAt(i)).matches("^(0|1|[3-9]|10|J|Q|K|A|2|大王|小王)$")) {
                 throw new IllegalArgumentException("不是扑克牌");
             }
         }
