@@ -1,15 +1,12 @@
 package util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 // 纯工具类：负责牌堆模板和牌面显示，不参与对局流程控制。
 public final class CardUtil {
@@ -30,7 +27,7 @@ public final class CardUtil {
      * 此映射用于将数字形式的牌ID转换为人类可读的牌面表示，
      * 但不包含花色信息。例如，"3"代表所有花色的3。
      */
-    private static final Map<Integer,String> CARD_DICTIONARY_WITHOUTSUITS = new HashMap<>();
+    private static final Map<String, Integer> CARD_DICTIONARY_WITHOUTSUITS = new HashMap<>();
 
     static {
         List<String> numbers = new ArrayList<>();
@@ -63,7 +60,7 @@ public final class CardUtil {
             DECK_TEMPLATE.add(i + 1);
         }
         for (int i = 0; i < cardsWithoutSuits.size(); i++) {
-            CARD_DICTIONARY_WITHOUTSUITS.put(i + 1, cardsWithoutSuits.get(i));
+            CARD_DICTIONARY_WITHOUTSUITS.put(cardsWithoutSuits.get(i), i + 1);
         }
     }
 
@@ -116,19 +113,59 @@ public final class CardUtil {
                 .collect(Collectors.joining(" "));
     }
 
-    public static Collection<Integer> stringToCards(String cards){
-        if (cards.isBlank()){
+    /**
+     * 将表示扑克牌的字符串转换为对应的牌索引集合。
+     *
+     * @param cards 表示扑克牌的字符串，其中每张牌用字符表示（如"3", "A", "大王"等）。字符串中的空格将被忽略。
+     * @return 一个包含牌索引的集合，每个索引对应于传入字符串中的一张牌。索引值根据内部定义的字典映射确定。
+     * @throws IllegalArgumentException 如果输入字符串为空或包含无效的牌字符。
+     */
+    public static Collection<Integer> stringToCards(String cards) {
+        if (cards.isBlank()) {
             throw new IllegalArgumentException("字符串不能为空");
         }
-        return Stream.of(cards).map(new Function<String, Integer>() {
-            @Override
-            public Integer apply(String s) {
-                String[] split = s.split(" ");
-                if (s.isBlank()){
-
-                }
-                return 0;
+        cards = cards.toUpperCase().trim().replace(" ", "");
+        for (int i = 0; i < cards.length(); i++) {
+            if (!String.valueOf(cards.charAt(i)).matches("^([3-9]|10|J|Q|K|A|2|大王|小王)$")) {
+                throw new IllegalArgumentException("不是扑克牌");
             }
-        }).toList();
+        }
+
+        Collection<Integer> cardIndex = new ArrayList<>();
+        int index;
+
+        for (String consecutiveEqualChar : findConsecutiveEqualChars(cards)) {
+            for (int i = 0; i < consecutiveEqualChar.length(); i++) {
+                index = CARD_DICTIONARY_WITHOUTSUITS.get(String.valueOf(consecutiveEqualChar.charAt(i)));
+                cardIndex.add(index);
+            }
+        }
+
+        return cardIndex;
+    }
+
+    /**
+     * 该方法用于找出字符串中连续且相同的字符序列。
+     * 每个这样的序列作为一个单独的字符串被添加到返回的集合中。
+     *
+     * @param cards 输入的字符串，其中寻找连续相同的字符。
+     * @return 包含所有找到的连续相同字符组成的子串的集合。
+     */
+    public static Collection<String> findConsecutiveEqualChars(String cards) {
+        //要求找出字符串中连续且相等的字符
+        Collection<String> list = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        sb.append(cards.charAt(0));
+        for (int i = 1; i < cards.length(); i++) {
+            if (cards.charAt(i) == cards.charAt(i - 1)) {
+                sb.append(cards.charAt(i));
+            } else {
+                list.add(sb.toString());
+                sb = new StringBuilder();
+                sb.append(cards.charAt(i));
+            }
+        }
+        list.add(sb.toString());
+        return list;
     }
 }

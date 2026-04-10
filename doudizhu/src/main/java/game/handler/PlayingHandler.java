@@ -5,6 +5,7 @@ import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
 import game.state.PlayState;
+import game.state.PlayerState;
 import rule.PlayRuleChecker;
 
 import java.util.List;
@@ -25,6 +26,8 @@ public class PlayingHandler {
         // 出牌
         if (ActionType.PLAY_CARD == actionType) {
             playState.setLastPlayedCards(cards);
+            PlayerState currentPlayer = room.getPlayerById(currentPlayerId);
+            currentPlayer.removeCards(cards);
             return GameResult.accepted("出牌");
         }
         // 不出
