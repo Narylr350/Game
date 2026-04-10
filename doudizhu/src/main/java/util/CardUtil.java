@@ -1,22 +1,42 @@
 package util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 // 纯工具类：负责牌堆模板和牌面显示，不参与对局流程控制。
 public final class CardUtil {
+    /**
+     * 卡牌字典，用于存储卡牌ID与对应卡牌名称的映射。
+     * 该映射表以整数作为键（代表卡牌ID），字符串作为值（代表卡牌的具体描述或名称）。
+     * 主要用于将卡牌ID转换为易于理解的文本形式，或者反之，确保了卡牌信息的一致性和可读性。
+     */
     private static final Map<Integer, String> CARD_DICTIONARY = new HashMap<>();
+    /**
+     * 一副牌的模板,包含54张牌,每张牌用唯一的整数ID表示。
+     * 该模板用于生成标准的扑克牌堆,其中包含了所有可能的牌,包括大小王。
+     * 模板中的牌顺序是固定的,通常用于创建新的、未洗牌的牌堆。
+     */
     private static final List<Integer> DECK_TEMPLATE = new ArrayList<>();
+    /**
+     * 一个映射，将不含花色的牌ID映射到对应的牌面字符串。
+     * 此映射用于将数字形式的牌ID转换为人类可读的牌面表示，
+     * 但不包含花色信息。例如，"3"代表所有花色的3。
+     */
+    private static final Map<Integer,String> CARD_DICTIONARY_WITHOUTSUITS = new HashMap<>();
 
     static {
         List<String> numbers = new ArrayList<>();
         List<String> suits = new ArrayList<>();
         List<String> cards = new ArrayList<>();
+        List<String> cardsWithoutSuits = new ArrayList<>();
 
         Collections.addAll(numbers, "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2");
         Collections.addAll(suits, "⬛️", "♣️", "♥️", "♠️");
@@ -27,12 +47,23 @@ public final class CardUtil {
             }
         }
 
+        for (String number : numbers) {
+            for (int i = 0; i < 4; i++) {
+                cardsWithoutSuits.add(number);
+            }
+        }
+
         cards.add("小王");
         cards.add("大王");
+        cardsWithoutSuits.add("小王");
+        cardsWithoutSuits.add("大王");
 
         for (int i = 0; i < cards.size(); i++) {
             CARD_DICTIONARY.put(i + 1, cards.get(i));
             DECK_TEMPLATE.add(i + 1);
+        }
+        for (int i = 0; i < cardsWithoutSuits.size(); i++) {
+            CARD_DICTIONARY_WITHOUTSUITS.put(i + 1, cardsWithoutSuits.get(i));
         }
     }
 
@@ -83,5 +114,21 @@ public final class CardUtil {
                     return card;
                 })
                 .collect(Collectors.joining(" "));
+    }
+
+    public static Collection<Integer> stringToCards(String cards){
+        if (cards.isBlank()){
+            throw new IllegalArgumentException("字符串不能为空");
+        }
+        return Stream.of(cards).map(new Function<String, Integer>() {
+            @Override
+            public Integer apply(String s) {
+                String[] split = s.split(" ");
+                if (s.isBlank()){
+
+                }
+                return 0;
+            }
+        }).toList();
     }
 }

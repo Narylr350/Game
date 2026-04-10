@@ -1,5 +1,6 @@
 package game.state;
 
+import java.util.List;
 import java.util.TreeSet;
 
 /**
@@ -109,5 +110,11 @@ public class PlayerState {
      */
     public void addCards(TreeSet<Integer> extraCards) {
         cards.addAll(extraCards);
+    }
+
+    public void removeCards(List<Integer> removeCards){
+        for (Integer removeCard : removeCards) {
+            cards.remove(removeCard);
+        }
     }
 }

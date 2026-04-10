@@ -162,12 +162,7 @@
                  continue;
              }
 
-             GamePhase messageType = currentRoom.getCurrentPhase();
-             if (messageType == null) {
-                 System.out.println("当前阶段没有对应提示类型，流程结束。当前阶段：" + currentRoom.getCurrentPhase());
-                 return;
-             }
- 
+
              /*
                正常玩家输入流程：
                1. 给当前玩家发提示；
@@ -175,7 +170,8 @@
                3. 解析输入为动作；
                4. 交给统一的动作处理逻辑。
               */
-             Result result = waitPlayerAction(playerId, messageType);
+             GamePhase gamePhase = currentRoom.getCurrentPhase();
+             Result result = waitPlayerAction(playerId, gamePhase);
              if (result == null) {
                  System.out.println("等待玩家输入失败，流程结束");
                  return;
@@ -183,7 +179,7 @@
 
              System.out.println("收到玩家 " + result.getPlayerId() + " 输入：" + result.getMessage());
 
-             ActionType actionType = ActionType.parseAction(result.getMessage(), messageType);
+             ActionType actionType = ActionType.parseAction(result.getMessage(), gamePhase);
              GameAction action = new GameAction(result.getPlayerId(), actionType, null);
 
              System.out.println("阶段: " + currentRoom.getCurrentPhase());
@@ -252,7 +248,7 @@
              System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
              return true;
          }
- 
+
          /*
            其他普通情况：
            当前流程继续。

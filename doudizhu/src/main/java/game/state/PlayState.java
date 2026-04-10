@@ -27,6 +27,22 @@ public class PlayState {
 
     private Integer  highestCardCandidateId;
 
+    public Integer getHighestCardPlayerId() {
+        return highestCardPlayerId;
+    }
+
+    public void setHighestCardPlayerId(Integer highestCardPlayerId) {
+        this.highestCardPlayerId = highestCardPlayerId;
+    }
+
+    public Integer getHighestCardCandidateId() {
+        return highestCardCandidateId;
+    }
+
+    public void setHighestCardCandidateId(Integer highestCardCandidateId) {
+        this.highestCardCandidateId = highestCardCandidateId;
+    }
+
     /**
      * 获取上一手出牌的玩家ID。
      *

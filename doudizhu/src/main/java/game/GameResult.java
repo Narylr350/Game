@@ -114,6 +114,14 @@ public class GameResult {
                 null);
     }
 
+    public static GameResult highestCardDecided(String message){
+        return new GameResult(
+                true,
+                message,
+                GameEventType.HIGHESTCARD_DECIDED,
+                null
+        );
+    }
     /**
      * 判断动作是否被成功处理。
      *
