@@ -171,8 +171,8 @@ public class GameFlow {
      */
     public void confirmLandlord(GameRoom room, Integer landlordId) {
         room.setCurrentPhase(GamePhase.PLAYING);
-        room.getPlayState().setHighestCardPlayerId(room.getLandlordPlayerId());
         room.setLandlordPlayerId(landlordId);
+        room.getPlayingState().setHighestCardPlayerId(landlordId);
 
         PlayerState player = room.getPlayerById(landlordId);
         if (player != null) {

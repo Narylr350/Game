@@ -1,7 +1,7 @@
 package game;
 
 import game.state.LandlordState;
-import game.state.PlayState;
+import game.state.PlayingState;
 import game.state.PlayerState;
 
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class GameRoom {
     private final TreeSet<Integer> holeCards;
     // ===== 阶段状态 =====
     private final LandlordState landlordState;
-    private final PlayState playState;
+    private final PlayingState playingState;
     // ===== 流程状态 =====
     private GamePhase currentPhase;
     private Integer currentPlayerId;
@@ -41,34 +41,19 @@ public class GameRoom {
         this.holeCards = new TreeSet<>(holeCards);
         // 阶段初始化
         this.landlordState = new LandlordState();
-        this.playState = new PlayState();
+        this.playingState = new PlayingState();
         // 流程初始化
         this.currentPhase = GamePhase.WAITING;
     }
 
-    /**
-     * 获取当前游戏阶段。
-     *
-     * @return 当前游戏阶段枚举
-     */
     public GamePhase getCurrentPhase() {
         return currentPhase;
     }
 
-    /**
-     * 设置当前游戏阶段。
-     *
-     * @param currentPhase 要设置的游戏阶段
-     */
     public void setCurrentPhase(GamePhase currentPhase) {
         this.currentPhase = currentPhase;
     }
 
-    /**
-     * 获取所有玩家状态的只读列表。
-     *
-     * @return 不可修改的玩家状态列表
-     */
     public List<PlayerState> getPlayers() {
         return Collections.unmodifiableList(playerStates);
     }
@@ -88,29 +73,14 @@ public class GameRoom {
         return null;
     }
 
-    /**
-     * 获取当前轮到操作的玩家ID。
-     *
-     * @return 当前玩家ID
-     */
     public Integer getCurrentPlayerId() {
         return currentPlayerId;
     }
 
-    /**
-     * 设置当前轮到操作的玩家ID。
-     *
-     * @param currentPlayerId 玩家ID
-     */
     public void setCurrentPlayerId(Integer currentPlayerId) {
         this.currentPlayerId = currentPlayerId;
     }
 
-    /**
-     * 获取地主玩家ID。
-     *
-     * @return 地主玩家ID
-     */
     public Integer getLandlordPlayerId() {
         return landlordPlayerId;
     }
@@ -127,40 +97,19 @@ public class GameRoom {
         }
     }
 
-
-    /**
-     * 获取底牌的副本。
-     *
-     * @return 底牌集合的副本(已排序)
-     */
     public TreeSet<Integer> getHoleCards() {
         return new TreeSet<>(holeCards);
     }
 
-    /**
-     * 获取当前游戏房间的地主状态。
-     *
-     * @return 当前地主状态对象
-     */
     public LandlordState getLandlordState() {
         return landlordState;
     }
 
-    /**
-     * 获取出牌阶段状态对象。
-     *
-     * @return 出牌阶段状态
-     */
-    public PlayState getPlayState() {
-        return playState;
+    public PlayingState getPlayingState() {
+        return playingState;
     }
 
-    /**
-     * 获取下一个玩家ID（循环）。
-     *
-     * @param currentPlayerId 当前玩家ID
-     * @return 下一个玩家ID
-     */
+
     public Integer getNextPlayerId(Integer currentPlayerId) {
         if (currentPlayerId == null || playerStates.isEmpty()) {
             return null;

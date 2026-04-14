@@ -22,18 +22,11 @@ public final class CardUtil {
      * 模板中的牌顺序是固定的,通常用于创建新的、未洗牌的牌堆。
      */
     private static final List<Integer> DECK_TEMPLATE = new ArrayList<>();
-    /**
-     * 一个映射，将不含花色的牌ID映射到对应的牌面字符串。
-     * 此映射用于将数字形式的牌ID转换为人类可读的牌面表示，
-     * 但不包含花色信息。例如，"3"代表所有花色的3。
-     */
-    private static final Map<String, Integer> CARD_DICTIONARY_WITHOUTSUITS = new HashMap<>();
 
     static {
         List<String> numbers = new ArrayList<>();
         List<String> suits = new ArrayList<>();
         List<String> cards = new ArrayList<>();
-        List<String> cardsWithoutSuits = new ArrayList<>();
 
         Collections.addAll(numbers, "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2");
         Collections.addAll(suits, "⬛️", "♣️", "♥️", "♠️");
@@ -44,23 +37,12 @@ public final class CardUtil {
             }
         }
 
-        for (String number : numbers) {
-            for (int i = 0; i < 4; i++) {
-                cardsWithoutSuits.add(number);
-            }
-        }
-
         cards.add("小王");
         cards.add("大王");
-        cardsWithoutSuits.add("小王");
-        cardsWithoutSuits.add("大王");
 
         for (int i = 0; i < cards.size(); i++) {
             CARD_DICTIONARY.put(i + 1, cards.get(i));
             DECK_TEMPLATE.add(i + 1);
-        }
-        for (int i = 0; i < cardsWithoutSuits.size(); i++) {
-            CARD_DICTIONARY_WITHOUTSUITS.put(cardsWithoutSuits.get(i), i + 1);
         }
     }
 
@@ -114,58 +96,125 @@ public final class CardUtil {
     }
 
     /**
-     * 将表示扑克牌的字符串转换为对应的牌索引集合。
+     * 把玩家输入的牌面字符串，解析成“该玩家手牌中的具体牌索引”。
+     * <p>
+     * 规则：
+     * 1. 空串或 pass 返回空列表，表示不出。
+     * 2. 支持无空格输入：3334 / 10JQ / 小王大王
+     * 3. 支持有空格输入：3 3 3 4 / 10 J Q
+     * 4. 只校验玩家手里是否真的有这些牌，不校验牌型是否合法。
      *
-     * @param cards 表示扑克牌的字符串，其中每张牌用字符表示（如"3", "A", "大王"等）。字符串中的空格将被忽略。
-     * @return 一个包含牌索引的集合，每个索引对应于传入字符串中的一张牌。索引值根据内部定义的字典映射确定。
-     * @throws IllegalArgumentException 如果输入字符串为空或包含无效的牌字符。
+     * @param cards 玩家输入
+     * @param playerHandCards 玩家当前手牌索引
+     * @return 要出的具体牌索引列表
      */
-    public static Collection<Integer> stringToCards(String cards) {
-        if (cards.isBlank()) {
+    public static Collection<Integer> stringToCards(String cards, Collection<Integer> playerHandCards) {
+        if (cards == null) {
             throw new IllegalArgumentException("字符串不能为空");
         }
-        cards = cards.toUpperCase().trim().replace(" ", "");
-        for (int i = 0; i < cards.length(); i++) {
-            if (!String.valueOf(cards.charAt(i)).matches("^(0|1|[3-9]|10|J|Q|K|A|2|大王|小王)$")) {
-                throw new IllegalArgumentException("不是扑克牌");
-            }
+
+        cards = cards.trim();
+        if (cards.isEmpty() || "pass".equalsIgnoreCase(cards)) {
+            return new ArrayList<>();
         }
 
-        Collection<Integer> cardIndex = new ArrayList<>();
-        int index;
+        cards = cards.replace(" ", "");
 
-        for (String consecutiveEqualChar : findConsecutiveEqualChars(cards)) {
-            for (int i = 0; i < consecutiveEqualChar.length(); i++) {
-                index = CARD_DICTIONARY_WITHOUTSUITS.get(String.valueOf(consecutiveEqualChar.charAt(i)));
-                cardIndex.add(index);
-            }
+        List<String> inputTokens = tokenize(cards);
+        if (inputTokens.isEmpty()) {
+            throw new IllegalArgumentException("不是合法的扑克牌输入");
         }
 
-        return cardIndex;
+        List<Integer> available = new ArrayList<>(playerHandCards);
+        List<Integer> result = new ArrayList<>();
+
+        for (String token : inputTokens) {
+            Integer matchedCardId = findAndRemoveFirstMatchedCard(token, available);
+            if (matchedCardId == null) {
+                throw new IllegalArgumentException("手牌中没有足够的 " + token);
+            }
+            result.add(matchedCardId);
+        }
+
+        return result;
     }
 
     /**
-     * 该方法用于找出字符串中连续且相同的字符序列。
-     * 每个这样的序列作为一个单独的字符串被添加到返回的集合中。
-     *
-     * @param cards 输入的字符串，其中寻找连续相同的字符。
-     * @return 包含所有找到的连续相同字符组成的子串的集合。
+     * 把字符串拆成 token。
+     * 例：
+     * 3334 -> [3,3,3,4]
+     * 10JQ -> [10,J,Q]
+     * 小王大王 -> [小王,大王]
      */
-    public static Collection<String> findConsecutiveEqualChars(String cards) {
-        //要求找出字符串中连续且相等的字符
-        Collection<String> list = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
-        sb.append(cards.charAt(0));
-        for (int i = 1; i < cards.length(); i++) {
-            if (cards.charAt(i) == cards.charAt(i - 1)) {
-                sb.append(cards.charAt(i));
-            } else {
-                list.add(sb.toString());
-                sb = new StringBuilder();
-                sb.append(cards.charAt(i));
+    public static List<String> tokenize(String cards) {
+        List<String> result = new ArrayList<>();
+        int i = 0;
+
+        while (i < cards.length()) {
+            String matched = matchLongestTokenPrefix(cards, i);
+            if (matched == null) {
+                return Collections.emptyList();
+            }
+            result.add(matched);
+            i += matched.length();
+        }
+
+        return result;
+    }
+
+    /**
+     * 从给定的字符串中，找到从指定位置开始的最长词元前缀。
+     * 该方法会尝试匹配预定义的词元列表，并返回最长的匹配项。
+     *
+     * @param cards 要解析的牌面字符串
+     * @param start 开始查找的位置
+     * @return 找到的最长词元前缀，如果未找到则返回null
+     */
+    private static String matchLongestTokenPrefix(String cards, int start) {
+        // 最长优先，避免 10 被拆成 1 和 0
+        List<String> orderedTokens = List.of("小王", "大王", "10", "J", "Q", "K", "A", "2", "3", "4", "5", "6", "7", "8", "9");
+        for (String token : orderedTokens) {
+            if (cards.startsWith(token, start)) {
+                return token;
             }
         }
-        list.add(sb.toString());
-        return list;
+        return null;
+    }
+
+    /**
+     * 从可用牌列表中查找并移除第一个与给定词元匹配的牌。
+     *
+     * @param token 要匹配的词元
+     * @param available 可用牌ID列表
+     * @return 找到并移除的第一个匹配牌的ID，如果没有找到匹配项则返回null
+     */
+    private static Integer findAndRemoveFirstMatchedCard(String token, List<Integer> available) {
+        for (int i = 0; i < available.size(); i++) {
+            Integer cardId = available.get(i);
+            String cardText = CARD_DICTIONARY.get(cardId);
+            if (cardText == null) {
+                continue;
+            }
+
+            if (matchesToken(cardText, token)) {
+                available.remove(i);
+                return cardId;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 检查给定的牌面文本是否与词元匹配。
+     *
+     * @param cardText 牌面显示文本
+     * @param token 要匹配的词元
+     * @return 如果牌面文本与词元匹配，则返回true；否则返回false
+     */
+    private static boolean matchesToken(String cardText, String token) {
+        if ("小王".equals(token) || "大王".equals(token)) {
+            return cardText.equals(token);
+        }
+        return cardText.startsWith(token);
     }
 }
