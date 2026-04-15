@@ -15,7 +15,7 @@ import java.util.List;
  * 目前仅检查房间、玩家、牌组是否为空等基础条件,不检查牌型合法性。
  * </p>
  */
-public class PlayRuleChecker {
+public class PlayingRuleChecker {
     /**
      * 验证玩家是否可以出牌。
      *
@@ -34,5 +34,8 @@ public class PlayRuleChecker {
         if (GamePhase.PLAYING != room.getCurrentPhase()){
             throw new IllegalStateException("只能为PLAYING阶段");
         }
+    }
+    public static void identify(){
+
     }
 }

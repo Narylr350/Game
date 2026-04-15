@@ -6,7 +6,7 @@ import game.action.ActionType;
 import game.action.GameAction;
 import game.state.PlayerState;
 import game.state.PlayingState;
-import rule.PlayRuleChecker;
+import rule.PlayingRuleChecker;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ public class PlayingHandler {
         List<Integer> cards = action.getCards();
         PlayerState currentPlayer = room.getPlayerById(currentPlayerId);
 
-        PlayRuleChecker.validateCanPlay(room, playerId, cards);
+        PlayingRuleChecker.validateCanPlay(room, playerId, cards);
 
         if (currentPlayerId != playerId) {
             return GameResult.rejected("是你吗你就出", playerId);

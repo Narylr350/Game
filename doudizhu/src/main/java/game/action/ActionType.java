@@ -61,7 +61,7 @@ public enum ActionType {
                 break;
 
             case PLAYING:
-                return input.isBlank() ? PASS_CARD : PLAY_CARD;
+                return input.isBlank() || "pass".equalsIgnoreCase(input) ? PASS_CARD : PLAY_CARD;
         }
 
         return null;

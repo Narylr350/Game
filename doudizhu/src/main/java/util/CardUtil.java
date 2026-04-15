@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 // 纯工具类：负责牌堆模板和牌面显示，不参与对局流程控制。
@@ -23,30 +25,42 @@ public final class CardUtil {
      */
     private static final List<Integer> DECK_TEMPLATE = new ArrayList<>();
 
+    private static final Map<String, Integer> RANKMAP = new HashMap<>();
+
     static {
         List<String> numbers = new ArrayList<>();
         List<String> suits = new ArrayList<>();
+        List<String> jokers = new ArrayList<>();
         List<String> cards = new ArrayList<>();
+        List<String> rank = new ArrayList<>();
 
         Collections.addAll(numbers, "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2");
         Collections.addAll(suits, "⬛️", "♣️", "♥️", "♠️");
+        Collections.addAll(jokers, "小王", "大王");
+        rank.addAll(numbers);
+        rank.addAll(jokers);
 
         for (String number : numbers) {
             for (String suit : suits) {
                 cards.add(number + suit);
             }
         }
-
-        cards.add("小王");
-        cards.add("大王");
+        cards.addAll(jokers);
 
         for (int i = 0; i < cards.size(); i++) {
             CARD_DICTIONARY.put(i + 1, cards.get(i));
             DECK_TEMPLATE.add(i + 1);
         }
+        for (int i = 0; i < rank.size(); i++) {
+            RANKMAP.put(rank.get(i), i);
+        }
     }
 
     private CardUtil() {
+    }
+
+    public static int getRank(String card){
+        return RANKMAP.get(card);
     }
 
     /**
@@ -104,7 +118,7 @@ public final class CardUtil {
      * 3. 支持有空格输入：3 3 3 4 / 10 J Q
      * 4. 只校验玩家手里是否真的有这些牌，不校验牌型是否合法。
      *
-     * @param cards 玩家输入
+     * @param cards           玩家输入
      * @param playerHandCards 玩家当前手牌索引
      * @return 要出的具体牌索引列表
      */
@@ -184,7 +198,7 @@ public final class CardUtil {
     /**
      * 从可用牌列表中查找并移除第一个与给定词元匹配的牌。
      *
-     * @param token 要匹配的词元
+     * @param token     要匹配的词元
      * @param available 可用牌ID列表
      * @return 找到并移除的第一个匹配牌的ID，如果没有找到匹配项则返回null
      */
@@ -208,7 +222,7 @@ public final class CardUtil {
      * 检查给定的牌面文本是否与词元匹配。
      *
      * @param cardText 牌面显示文本
-     * @param token 要匹配的词元
+     * @param token    要匹配的词元
      * @return 如果牌面文本与词元匹配，则返回true；否则返回false
      */
     private static boolean matchesToken(String cardText, String token) {
