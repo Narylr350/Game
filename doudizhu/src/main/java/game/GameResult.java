@@ -21,7 +21,7 @@ public class GameResult {
      * @param eventType 事件类型
      * @param sendToPlayerId 目标玩家ID
      */
-    public GameResult(boolean success, String message, GameEventType eventType, Integer sendToPlayerId) {
+    private GameResult(boolean success, String message, GameEventType eventType, Integer sendToPlayerId) {
         this.success = success;
         this.message = message;
         this.eventType = eventType;
@@ -118,7 +118,7 @@ public class GameResult {
         return new GameResult(
                 true,
                 message,
-                GameEventType.HIGHESTCARD_DECIDED,
+                GameEventType.HIGHEST_CARD_DECIDED,
                 null
         );
     }

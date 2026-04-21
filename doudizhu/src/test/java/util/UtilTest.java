@@ -1,6 +1,7 @@
 package util;
 
 import game.GameFlow;
+import game.GameResult;
 import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
@@ -27,10 +28,12 @@ public class UtilTest {
         System.out.println(CardUtil.cardsToString(player1.getCards()));
         System.out.println(CardUtil.cardsToString(player2.getCards()));
         System.out.println(CardUtil.cardsToString(player3.getCards()));
-        GameAction action3 = new GameAction(1, ActionType.PLAY_CARD, (List<Integer>) CardUtil.stringToCards("3", player1.getCards()));
-        gameFlow.handlePlayerAction(room, action3);
+        GameAction action3 = new GameAction(1, ActionType.PLAY_CARD, (List<Integer>) CardUtil.stringToCards("10jqk", player1.getCards()));
+        GameResult gameResult = gameFlow.handlePlayerAction(room, action3);
         PlayingState playingState = room.getPlayingState();
+        System.out.println(gameResult.getMessage());
         System.out.println(CardUtil.cardsToString(playingState.getLastPlayedCards()));
         System.out.println(CardUtil.cardsToString(player1.getCards()));
+
     }
 }

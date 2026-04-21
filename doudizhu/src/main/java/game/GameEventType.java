@@ -27,5 +27,5 @@ public enum GameEventType {
      * 地主已确定
      */
     LANDLORD_DECIDED,
-    HIGHESTCARD_DECIDED
+    HIGHEST_CARD_DECIDED
 }

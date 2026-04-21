@@ -42,5 +42,11 @@ public enum CardType {
     /**
      * 火箭（大王+小王）
      */
-    ROCKET
+    ROCKET,
+    THREE_WITH_ONE,
+    THREE_WITH_PAIR,
+    AIRPLANE_WITH_SINGLE_WINGS,
+    AIRPLANE_WITH_PAIR_WINGS,
+    FOUR_WITH_TWO_SINGLE,
+    FOUR_WITH_TWO_PAIR
 }

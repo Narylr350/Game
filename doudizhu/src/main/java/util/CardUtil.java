@@ -25,20 +25,19 @@ public final class CardUtil {
      */
     private static final List<Integer> DECK_TEMPLATE = new ArrayList<>();
 
-    private static final Map<String, Integer> RANKMAP = new HashMap<>();
+    public static final int TWO_RANK = 13;
+    public static final int SMALL_JOKER_RANK = 14;
+    public static final int BIG_JOKER_RANK = 15;
 
     static {
         List<String> numbers = new ArrayList<>();
         List<String> suits = new ArrayList<>();
         List<String> jokers = new ArrayList<>();
         List<String> cards = new ArrayList<>();
-        List<String> rank = new ArrayList<>();
 
         Collections.addAll(numbers, "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2");
         Collections.addAll(suits, "⬛️", "♣️", "♥️", "♠️");
         Collections.addAll(jokers, "小王", "大王");
-        rank.addAll(numbers);
-        rank.addAll(jokers);
 
         for (String number : numbers) {
             for (String suit : suits) {
@@ -48,19 +47,12 @@ public final class CardUtil {
         cards.addAll(jokers);
 
         for (int i = 0; i < cards.size(); i++) {
-            CARD_DICTIONARY.put(i + 1, cards.get(i));
-            DECK_TEMPLATE.add(i + 1);
-        }
-        for (int i = 0; i < rank.size(); i++) {
-            RANKMAP.put(rank.get(i), i);
+            CARD_DICTIONARY.put(i, cards.get(i));
+            DECK_TEMPLATE.add(i);
         }
     }
 
     private CardUtil() {
-    }
-
-    public static int getRank(String card){
-        return RANKMAP.get(card);
     }
 
     /**
@@ -127,8 +119,8 @@ public final class CardUtil {
             throw new IllegalArgumentException("字符串不能为空");
         }
 
-        cards = cards.trim();
-        if (cards.isEmpty() || "pass".equalsIgnoreCase(cards)) {
+        cards = cards.trim().toUpperCase();
+        if (cards.isEmpty() || "PASS".equalsIgnoreCase(cards)) {
             return new ArrayList<>();
         }
 
