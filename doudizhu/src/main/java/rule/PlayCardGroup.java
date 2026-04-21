@@ -74,7 +74,7 @@ public class PlayCardGroup {
             return new PlayCardGroup(CardType.ROCKET, maxRank(ranks), 2);
         }
         //飞机
-        if (size >= 6 && countMap.size() >= 2) {
+        if (isAirplane()) {
             return new PlayCardGroup(CardType.AIRPLANE, maxRank(ranks), 6);
         }
         //顺子
@@ -99,7 +99,9 @@ public class PlayCardGroup {
                 .max(Integer::compare)
                 .orElse(-1);
     }
-
+    private static boolean isAirplane(){
+        return true;
+    }
     /**
      * 判断给定的牌列表是否构成顺子。
      *

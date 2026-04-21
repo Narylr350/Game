@@ -1,8 +1,6 @@
 package rule;
 
 import org.junit.jupiter.api.Test;
-import rule.CardType;
-import rule.PlayCardGroup;
 import util.CardUtil;
 
 import java.util.List;

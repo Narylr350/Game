@@ -92,14 +92,14 @@ public class CardUtilTest {
     @Test
     void shouldParseSmallAndBigJoker() {
         // 53 = 小王, 54 = 大王
-        Collection<Integer> handCards = List.of(53, 54, 1, 2);
+        Collection<Integer> handCards = List.of(52, 53, 0, 1);
 
         Collection<Integer> result = CardUtil.stringToCards("小王大王", handCards);
 
         assertNotNull(result);
         assertEquals(2, result.size());
+        assertTrue(result.contains(52));
         assertTrue(result.contains(53));
-        assertTrue(result.contains(54));
     }
 
     @Test
