@@ -34,6 +34,10 @@ public class PlayCardGroupTest {
         );
     }
 
+    private void assertMainRank(String input, int expectedRank) {
+        assertEquals(expectedRank, parseFromInput(input).getMainRank());
+    }
+
     @Test
     void should_parse_single() {
         assertEquals(CardType.SINGLE, parseFromInput("3").getType());
@@ -137,6 +141,11 @@ public class PlayCardGroupTest {
     }
 
     @Test
+    void should_use_triple_rank_as_main_rank_for_three_with_one() {
+        assertMainRank("3 3 3 小王", 1);
+    }
+
+    @Test
     void should_parse_three_with_pair() {
         assertEquals(CardType.THREE_WITH_PAIR, parseFromInput("3 3 3 4 4").getType());
     }
@@ -182,8 +191,18 @@ public class PlayCardGroupTest {
     }
 
     @Test
+    void should_use_airplane_body_rank_as_main_rank_for_single_wings() {
+        assertMainRank("3 3 3 4 4 4 小王 大王", 2);
+    }
+
+    @Test
     void should_parse_airplane_with_pair_wings() {
         assertEquals(CardType.AIRPLANE_WITH_PAIR_WINGS, parseFromInput("3 3 3 4 4 4 5 5 6 6").getType());
+    }
+
+    @Test
+    void should_use_airplane_body_rank_as_main_rank_for_pair_wings() {
+        assertMainRank("3 3 3 4 4 4 A A 2 2", 2);
     }
 
     @Test
