@@ -1,16 +1,18 @@
 package util;
 
-import game.GameFlow;
-import game.GamePhase;
-import game.GameResult;
-import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
+import game.enumtype.GamePhase;
+import game.flow.GameFlow;
+import game.model.GameResult;
+import game.model.GameRoom;
 import game.state.PlayerState;
-import game.state.PlayingState;
+import rule.play.PlayCardGroup;
+import rule.play.PlayingRuleChecker;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class PlayFlowDebugMain {
     public static void main(String[] args) {
@@ -21,43 +23,121 @@ public class PlayFlowDebugMain {
         GameFlow gameFlow = new GameFlow();
         GameRoom room = gameFlow.startRoom(List.of("1", "2", "3"));
 
-        // 直接进入出牌阶段，避免叫/抢地主随机流程影响调试
         room.setCurrentPhase(GamePhase.PLAYING);
         room.setLandlordPlayerId(1);
         room.setCurrentPlayerId(1);
         room.getPlayingState().setHighestCardPlayerId(1);
 
-        PlayerState player1 = room.getPlayerById(1);
-        PlayerState player2 = room.getPlayerById(2);
-        PlayingState playingState = room.getPlayingState();
-
         printRoom(room, "初始状态");
-
-        play(gameFlow, room, 1, "10 J Q K A", player1);
-
-        // 当前 PlayingHandler 出牌后不会自动切到下家，这里手动切换方便继续调试
-        room.setCurrentPlayerId(2);
-
-        play(gameFlow, room, 2, "J Q K A 2", player2);
-        pass(gameFlow, room, 2);
-        pass(gameFlow, room, 3);
-
-        room.setCurrentPlayerId(1);
-        play(gameFlow, room, 1, "3 3 3 4", player1);
-
-        System.out.println("最后上一手 = "
-                + (playingState.getLastPlayedCards() == null
-                ? "null"
-                : CardUtil.cardsToString(playingState.getLastPlayedCards())));
-        printRoom(room, "结束状态");
+        runInteractiveLoop(gameFlow, room);
     }
 
-    private static void play(GameFlow gameFlow, GameRoom room, int playerId, String input, PlayerState player) {
-        List<Integer> cards = new ArrayList<>(CardUtil.stringToCards(input, player.getCards()));
-        GameAction action = new GameAction(playerId, ActionType.PLAY_CARD, cards);
+    private static void runInteractiveLoop(GameFlow gameFlow, GameRoom room) {
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            Integer currentPlayerId = room.getCurrentPlayerId();
+            PlayerState currentPlayer = room.getPlayerById(currentPlayerId);
+
+            if (currentPlayer == null) {
+                System.out.println("当前玩家不存在，结束调试。");
+                return;
+            }
+
+            System.out.println("==== 当前轮到玩家 " + currentPlayerId + " ====");
+            System.out.println("当前阶段 = " + room.getCurrentPhase());
+            System.out.println("地主玩家ID = " + room.getLandlordPlayerId());
+            System.out.println("当前手牌 = " + CardUtil.cardsToString(currentPlayer.getCards()));
+            System.out.println("上一手出的牌 = "
+                    + (room.getPlayingState().getLastPlayedCards() == null
+                    ? "null"
+                    : CardUtil.cardsToString(room.getPlayingState().getLastPlayedCards())));
+            System.out.println("请输入动作：直接输入牌面表示出牌，空行或 pass 表示不出，输入 exit 结束：");
+
+            String input = scanner.nextLine().trim();
+            if ("exit".equalsIgnoreCase(input)) {
+                System.out.println("调试结束。");
+                return;
+            }
+
+            ActionType actionType = ActionType.parseAction(input, GamePhase.PLAYING);
+            if (actionType == null) {
+                System.out.println("输入无法识别，请重新输入。");
+                System.out.println();
+                continue;
+            }
+
+            if (actionType == ActionType.PASS_CARD) {
+                handlePass(gameFlow, room, currentPlayerId);
+                continue;
+            }
+
+            handlePlay(gameFlow, room, currentPlayerId, input, currentPlayer);
+        }
+    }
+
+    private static void handlePlay(GameFlow gameFlow, GameRoom room, int playerId, String input, PlayerState player) {
+        try {
+            List<Integer> cards = new ArrayList<>(CardUtil.stringToCards(input, player.getCards()));
+            System.out.println("==== 玩家" + playerId + " 出牌预览 ====");
+            System.out.println(buildPlayPreview(room, input, cards));
+
+            GameAction action = new GameAction(playerId, ActionType.PLAY_CARD, cards);
+            GameResult result = gameFlow.handlePlayerAction(room, action);
+
+            System.out.println("==== 玩家" + playerId + " 出牌: " + input + " ====");
+            printResult(room, result, playerId);
+
+            if (result.isSuccess()) {
+                room.setCurrentPlayerId(room.getNextPlayerId(playerId));
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("输入无效 = " + e.getMessage());
+            System.out.println();
+        }
+    }
+
+    static String buildPlayPreview(GameRoom room, String input, List<Integer> cards) {
+        StringBuilder builder = new StringBuilder();
+        PlayCardGroup currentGroup = PlayCardGroup.analyzeCards(cards);
+        List<Integer> lastPlayedCards = room.getPlayingState().getLastPlayedCards();
+
+        builder.append("原始输入 = ").append(input).append(System.lineSeparator());
+        builder.append("解析后牌ID = ").append(cards).append(System.lineSeparator());
+        builder.append("解析后牌面 = ").append(CardUtil.cardsToString(cards)).append(System.lineSeparator());
+        appendGroupInfo(builder, "当前输入", currentGroup);
+
+        if (lastPlayedCards == null || lastPlayedCards.isEmpty()) {
+            builder.append("上一手牌面 = null").append(System.lineSeparator());
+            builder.append("上一手牌型 = null").append(System.lineSeparator());
+            builder.append("上一手主值 = -1").append(System.lineSeparator());
+            builder.append("上一手张数 = 0").append(System.lineSeparator());
+        } else {
+            builder.append("上一手牌ID = ").append(lastPlayedCards).append(System.lineSeparator());
+            builder.append("上一手牌面 = ").append(CardUtil.cardsToString(lastPlayedCards)).append(System.lineSeparator());
+            appendGroupInfo(builder, "上一手", PlayCardGroup.analyzeCards(lastPlayedCards));
+        }
+
+        builder.append("规则检查结果 = ")
+                .append(PlayingRuleChecker.checkPlay(room, cards));
+        return builder.toString();
+    }
+
+    private static void appendGroupInfo(StringBuilder builder, String prefix, PlayCardGroup cardGroup) {
+        builder.append(prefix).append("牌型 = ").append(cardGroup.getType()).append(System.lineSeparator());
+        builder.append(prefix).append("主值 = ").append(cardGroup.getMainRank()).append(System.lineSeparator());
+        builder.append(prefix).append("张数 = ").append(cardGroup.getSize()).append(System.lineSeparator());
+    }
+
+    private static void handlePass(GameFlow gameFlow, GameRoom room, int playerId) {
+        GameAction action = new GameAction(playerId, ActionType.PASS_CARD, List.of());
         GameResult result = gameFlow.handlePlayerAction(room, action);
 
-        System.out.println("==== 玩家" + playerId + " 出牌: " + input + " ====");
+        System.out.println("==== 玩家" + playerId + " 不出 ====");
+        printResult(room, result, playerId);
+    }
+
+    private static void printResult(GameRoom room, GameResult result, int playerId) {
         System.out.println("是否成功 = " + result.isSuccess());
         System.out.println("事件类型 = " + result.getEventType());
         System.out.println("结果消息 = " + result.getMessage());
@@ -68,18 +148,6 @@ public class PlayFlowDebugMain {
                 + (room.getPlayingState().getLastPlayedCards() == null
                 ? "null"
                 : CardUtil.cardsToString(room.getPlayingState().getLastPlayedCards())));
-        System.out.println();
-    }
-
-    private static void pass(GameFlow gameFlow, GameRoom room, int playerId) {
-        GameAction action = new GameAction(playerId, ActionType.PASS_CARD, List.of());
-        GameResult result = gameFlow.handlePlayerAction(room, action);
-
-        System.out.println("==== 玩家" + playerId + " 不出 ====");
-        System.out.println("是否成功 = " + result.isSuccess());
-        System.out.println("事件类型 = " + result.getEventType());
-        System.out.println("结果消息 = " + result.getMessage());
-        System.out.println("当前操作玩家ID = " + room.getCurrentPlayerId());
         System.out.println("连续不出次数 = " + room.getPlayingState().getPassCount());
         System.out.println();
     }

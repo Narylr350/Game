@@ -1,13 +1,13 @@
 package game.handler;
 
-import game.GameResult;
-import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
+import game.model.GameResult;
+import game.model.GameRoom;
 import game.state.PlayerState;
 import game.state.PlayingState;
-import rule.PlayCheckResult;
-import rule.PlayingRuleChecker;
+import rule.play.PlayCheckResult;
+import rule.play.PlayingRuleChecker;
 
 import java.util.List;
 

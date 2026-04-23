@@ -1,5 +1,6 @@
-package game;
+package game.model;
 
+import game.enumtype.GamePhase;
 import game.state.LandlordState;
 import game.state.PlayingState;
 import game.state.PlayerState;

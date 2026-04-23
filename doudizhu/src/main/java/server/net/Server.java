@@ -1,9 +1,12 @@
  package server.net;
 
- import game.*;
  import game.action.ActionType;
- import game.GameResult;
  import game.action.GameAction;
+ import game.enumtype.GameEventType;
+ import game.enumtype.GamePhase;
+ import game.flow.GameFlow;
+ import game.model.GameResult;
+ import game.model.GameRoom;
  import game.state.LandlordState;
  import game.state.PlayerState;
  import util.CardUtil;

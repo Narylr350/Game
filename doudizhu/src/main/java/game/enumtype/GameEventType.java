@@ -1,4 +1,4 @@
-package game;
+package game.enumtype;
 
 /**
  * 游戏事件类型枚举。

@@ -1,4 +1,4 @@
-package rule;
+package rule.play;
 
 import util.CardUtil;
 

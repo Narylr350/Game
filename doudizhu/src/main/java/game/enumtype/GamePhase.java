@@ -1,4 +1,4 @@
-package game;
+package game.enumtype;
 
 /**
  * 游戏阶段枚举。

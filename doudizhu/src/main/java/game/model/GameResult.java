@@ -1,4 +1,6 @@
-package game;
+package game.model;
+
+import game.enumtype.GameEventType;
 
 /**
  * 游戏动作处理结果类。

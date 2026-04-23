@@ -1,6 +1,6 @@
  package server.net;
 
- import game.GamePhase;
+ import game.enumtype.GamePhase;
 
  /**
   * 网络通信结果类。

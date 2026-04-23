@@ -1,7 +1,7 @@
-package rule;
+package rule.play;
 
-import game.GamePhase;
-import game.GameRoom;
+import game.enumtype.GamePhase;
+import game.model.GameRoom;
 import game.state.PlayingState;
 
 import java.util.List;
@@ -20,14 +20,14 @@ public class PlayingRuleChecker {
     /**
      * 检查玩家的出牌是否符合当前游戏规则。
      *
-     * @param room 游戏房间对象，不能为空
+     * @param room  游戏房间对象，不能为空
      * @param cards 玩家要出的牌列表
      * @return 返回一个PlayCheckResult枚举值，表示出牌检查的结果：
-     *         - VALID：当前出牌有效
-     *         - WRONG_PHASE：当前不是出牌阶段
-     *         - INVALID_CARD_PATTERN：出牌模式无效
-     *         - CARD_TYPE_MISMATCH：牌型不匹配
-     *         - NOT_STRONGER_THAN_LAST：当前出牌没有上一手大
+     * - VALID：当前出牌有效
+     * - WRONG_PHASE：当前不是出牌阶段
+     * - INVALID_CARD_PATTERN：出牌模式无效
+     * - CARD_TYPE_MISMATCH：牌型不匹配
+     * - NOT_STRONGER_THAN_LAST：当前出牌没有上一手大
      * @throws IllegalStateException 当room为null时抛出
      */
     public static PlayCheckResult checkPlay(GameRoom room, List<Integer> cards) {
@@ -41,8 +41,8 @@ public class PlayingRuleChecker {
                 .getType() == CardType.INVALID) {
             return PlayCheckResult.INVALID_CARD_PATTERN;
         }
-        if (hasLastPlay(room)){
-            return canBeat(room,cards);
+        if (hasLastPlay(room)) {
+            return canBeat(room, cards);
         }
         return PlayCheckResult.VALID;
     }
@@ -61,24 +61,30 @@ public class PlayingRuleChecker {
     /**
      * 检查当前出牌是否可以压过上家的牌。
      *
-     * @param room 游戏房间对象，包含当前游戏状态信息
+     * @param room         游戏房间对象，包含当前游戏状态信息
      * @param currentCards 当前玩家要出的牌列表
      * @return 返回一个PlayCheckResult枚举值，表示出牌检查的结果：
-     *         - VALID：当前出牌有效且可以压过上家
-     *         - CARD_TYPE_MISMATCH：当前出牌类型与上家出牌类型不匹配
-     *         - NOT_STRONGER_THAN_LAST：当前出牌不足以压过上家
+     * - VALID：当前出牌有效且可以压过上家
+     * - CARD_TYPE_MISMATCH：当前出牌类型与上家出牌类型不匹配
+     * - NOT_STRONGER_THAN_LAST：当前出牌不足以压过上家
      */
     private static PlayCheckResult canBeat(GameRoom room, List<Integer> currentCards) {
         PlayingState playingState = room.getPlayingState();
         List<Integer> lastPlayedCards = playingState.getLastPlayedCards();
         PlayCardGroup currentCardGroup = PlayCardGroup.analyzeCards(currentCards);
         PlayCardGroup lastCardGroup = PlayCardGroup.analyzeCards(lastPlayedCards);
+        //火箭特殊判断
+        if (currentCardGroup.getType()
+                .equals(CardType.BOMB) && lastCardGroup.getType()
+                .equals(CardType.ROCKET)) {
+            return PlayCheckResult.VALID;
+        }
         //判断牌型是否一致
-        if (currentCardGroup.getType()!=lastCardGroup.getType()){
+        if (currentCardGroup.getType() != lastCardGroup.getType()) {
             return PlayCheckResult.CARD_TYPE_MISMATCH;
         }
         //判断牌是否大过上家
-        if (currentCardGroup.getMainRank() < lastCardGroup.getMainRank()){
+        if (currentCardGroup.getMainRank() < lastCardGroup.getMainRank()) {
             return PlayCheckResult.NOT_STRONGER_THAN_LAST;
         }
         return PlayCheckResult.VALID;

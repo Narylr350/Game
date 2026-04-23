@@ -1,6 +1,6 @@
 package game.action;
 
-import game.GamePhase;
+import game.enumtype.GamePhase;
 
 /**
  * 叫地主/抢地主动作类型枚举。

@@ -1,12 +1,12 @@
 package game.handler;
 
-import game.GameFlow;
-import game.GameResult;
-import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
-import rule.LandlordCheckResult;
-import rule.LandlordRuleChecker;
+import game.flow.GameFlow;
+import game.model.GameResult;
+import game.model.GameRoom;
+import rule.landlord.LandlordCheckResult;
+import rule.landlord.LandlordRuleChecker;
 import game.state.LandlordState;
 
 import java.util.List;
@@ -80,7 +80,7 @@ public class RobLandlordHandler {
 
     /**
      * 解析抢地主的结果。
-     *
+     * <p>
      * 这里把“是否立即确认地主”收敛成一个出口，避免 CALL/PASS 两个分支各自维护结束条件。
      *
      * @param room 游戏房间对象

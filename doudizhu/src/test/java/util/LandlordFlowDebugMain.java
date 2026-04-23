@@ -1,11 +1,11 @@
 package util;
 
-import game.GameFlow;
-import game.GamePhase;
-import game.GameResult;
-import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
+import game.enumtype.GamePhase;
+import game.flow.GameFlow;
+import game.model.GameResult;
+import game.model.GameRoom;
 import game.state.LandlordState;
 
 import java.util.List;
