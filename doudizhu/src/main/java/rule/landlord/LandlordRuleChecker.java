@@ -1,7 +1,7 @@
-package rule;
+package rule.landlord;
 
-import game.GamePhase;
-import game.GameRoom;
+import game.enumtype.GamePhase;
+import game.model.GameRoom;
 import game.state.PlayerState;
 
 /**

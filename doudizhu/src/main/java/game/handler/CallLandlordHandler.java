@@ -1,14 +1,14 @@
 package game.handler;
 
-import game.GameFlow;
-import game.GamePhase;
-import game.GameResult;
-import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
+import game.enumtype.GamePhase;
+import game.flow.GameFlow;
+import game.model.GameResult;
+import game.model.GameRoom;
 import game.state.LandlordState;
-import rule.LandlordCheckResult;
-import rule.LandlordRuleChecker;
+import rule.landlord.LandlordCheckResult;
+import rule.landlord.LandlordRuleChecker;
 
 /**
  * 叫地主阶段处理器。

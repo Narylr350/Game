@@ -1,4 +1,4 @@
-package rule;
+package rule.landlord;
 
 /**
  * 叫地主/抢地主阶段的规则检查结果。

@@ -1,14 +1,14 @@
 package util;
 
-import game.GameFlow;
-import game.GamePhase;
-import game.GameResult;
-import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
+import game.enumtype.GamePhase;
+import game.flow.GameFlow;
+import game.model.GameResult;
+import game.model.GameRoom;
 import game.state.PlayerState;
-import rule.PlayCardGroup;
-import rule.PlayingRuleChecker;
+import rule.play.PlayCardGroup;
+import rule.play.PlayingRuleChecker;
 
 import java.util.ArrayList;
 import java.util.List;

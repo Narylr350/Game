@@ -1,12 +1,12 @@
 package game.handler;
 
-import game.GameFlow;
-import game.GameResult;
-import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
-import rule.LandlordCheckResult;
-import rule.LandlordRuleChecker;
+import game.flow.GameFlow;
+import game.model.GameResult;
+import game.model.GameRoom;
+import rule.landlord.LandlordCheckResult;
+import rule.landlord.LandlordRuleChecker;
 import game.state.LandlordState;
 
 import java.util.List;

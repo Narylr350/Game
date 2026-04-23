@@ -1,4 +1,4 @@
-package rule;
+package rule.play;
 
 import org.junit.jupiter.api.Test;
 import util.CardUtil;

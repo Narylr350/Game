@@ -1,4 +1,4 @@
-package rule;
+package rule.play;
 
 /**
  * 出牌阶段的规则检查结果。

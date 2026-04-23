@@ -1,5 +1,9 @@
-package game;
+package game.flow;
 
+import game.enumtype.GamePhase;
+import game.model.DealResult;
+import game.model.GameResult;
+import game.model.GameRoom;
 import game.action.GameAction;
 import game.handler.CallLandlordHandler;
 import game.handler.PlayingHandler;
@@ -12,7 +16,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.TreeSet;
 
-import static rule.NameRuleChecker.validatePlayerNames;
+import static rule.common.NameRuleChecker.validatePlayerNames;
 
 /**
  * 游戏流程管理类。
@@ -173,6 +177,7 @@ public class GameFlow {
         room.setCurrentPhase(GamePhase.PLAYING);
         room.setLandlordPlayerId(landlordId);
         room.getPlayingState().setHighestCardPlayerId(landlordId);
+        room.setCurrentPlayerId(landlordId);
 
         PlayerState player = room.getPlayerById(landlordId);
         if (player != null) {
