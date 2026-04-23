@@ -94,9 +94,9 @@
              currentRoom = GAME_FLOW.startRoom(collectPlayerNames());
 
              // 给每个玩家发送手牌
-             sendOpeningHands(currentRoom);
+//             sendOpeningHands(currentRoom);
 
-             broadcast("系统：发牌完成，游戏开始！");
+//             broadcast("系统：发牌完成，游戏开始！");
              System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
 
              // 启动服务端控制台线程，可手动广播消息
@@ -151,19 +151,19 @@
                如果当前阶段是抢地主，并且当前玩家在“叫地主阶段已选择不叫”的列表中，
                那么该玩家本轮不需要再等待输入，直接自动执行 PASS。
               */
-             if (currentRoom.getCurrentPhase() == GamePhase.ROB_LANDLORD
-                     && landlordState.getCallPassPlayerIds().contains(playerId)) {
-
-                 GameAction autoPassAction = new GameAction(playerId, ActionType.PASS, null);
-
-                 // 如果 handleGameResult 返回 false，说明当前流程应结束
-                 if (!handleGameResult(playerId, autoPassAction)) {
-                     return;
-                 }
-
-                 // 自动 PASS 完成后直接进入下一轮，重新读取新的 currentPlayerId
-                 continue;
-             }
+//             if (currentRoom.getCurrentPhase() == GamePhase.ROB_LANDLORD
+//                     && landlordState.getCallPassPlayerIds().contains(playerId)) {
+//
+//                 GameAction autoPassAction = new GameAction(playerId, ActionType.PASS, null);
+//
+////                 // 如果 handleGameResult 返回 false，说明当前流程应结束
+////                 if (!handleGameResult(playerId, autoPassAction)) {
+////                     return;
+////                 }
+//
+//                 // 自动 PASS 完成后直接进入下一轮，重新读取新的 currentPlayerId
+//                 continue;
+//             }
 
 
              /*
@@ -180,18 +180,44 @@
                  return;
              }
 
-             System.out.println("收到玩家 " + result.getPlayerId() + " 输入：" + result.getMessage());
+//             System.out.println("收到玩家 " + result.getPlayerId() + " 输入：" + result.getMessage());
+
+
 
              ActionType actionType = ActionType.parseAction(result.getMessage(), gamePhase);
              GameAction action = new GameAction(result.getPlayerId(), actionType, null);
 
              System.out.println("阶段: " + currentRoom.getCurrentPhase());
              System.out.println("当前操作人: " + currentRoom.getCurrentPlayerId());
+             System.out.println("message:"+result.message+" mssagetype:"+result.getMessageType());
 
-             // 如果 handleGameResult 返回 false，说明当前流程应结束
-             if (!handleGameResult(playerId, action)) {
-                 return;
+             //出牌阶段
+             if(currentRoom.getCurrentPhase()==GamePhase.PLAYING){
+                 action = new GameAction(
+                         currentRoom.getCurrentPlayerId(),
+                         ActionType.PLAY_CARD,
+                         (List<Integer>) CardUtil.stringToCards(
+                                 result.message,
+                                 currentRoom.getPlayerById(currentRoom.getCurrentPlayerId()).getCards()
+                         )
+
+                 );
+                 GAME_FLOW.handlePlayerAction(currentRoom,action);//出牌
+                 PlayerState ps = currentRoom.getPlayerById(currentRoom.getCurrentPlayerId());
+                 broadcast( currentRoom.getCurrentPlayerId(),CardUtil.cardsToString(ps.getCards()));
+                 System.out.println( currentRoom.getCurrentPlayerId()+":"+CardUtil.cardsToString(ps.getCards()));
+
+
+
              }
+             else{
+                 // 如果 handleGameResult 返回 false，说明当前流程应结束
+                 if (!handleGameResult(playerId, action)) {
+                     return;
+                 }
+             }
+
+
          }
      }
 
@@ -221,7 +247,7 @@
          // 打印当前状态，便于调试
          System.out.println(gameResult.getMessage());
          System.out.println("处理后阶段: " + currentRoom.getCurrentPhase());
-         System.out.println("处理后当前操作人: " + currentRoom.getCurrentPlayerId());
+         System.out.println("处理后操作人: " + currentRoom.getCurrentPlayerId());
          System.out.println("处理后地主: " + currentRoom.getLandlordPlayerId());
          System.out.println("第一个叫地主ID: " + landlordState.getFirstCallerId());
          System.out.println("不叫地主次数: " + landlordState.getCallPassCount());
@@ -237,8 +263,14 @@
 
              sendOpeningHands(currentRoom);
              System.out.println("系统：底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
-             return false;
+
+
+
+
+
          }
+
+
  
          /*
            需要重开：
@@ -288,30 +320,6 @@
          }
      }
 
-     /**
-      * 根据房间当前阶段，决定本轮该给玩家发什么提示。
-      * 这里只做阶段到消息类型的映射，不写业务规则。
-      *
-      * @param room 游戏房间对象
-      * @return 对应的消息类型,如果无法映射则返回null
-      */
-     private static MessageType resolveCurrentMessageType(GameRoom room) {
-         if (room == null || room.getCurrentPhase() == null) {
-             return null;
-         }
-
-
-         switch (room.getCurrentPhase()) {
-             case CALL_LANDLORD:
-                 return MessageType.CALL_LANDLORD;
-             case ROB_LANDLORD:
-                 return MessageType.ROB_LANDLORD;
-             case PLAYING:
-                 return MessageType.PLAY_CARD;
-             default:
-                 return null;
-         }
-     }
 
      /**
       * 接收客户端连接，并创建 PlayerConnection 放进集合。
@@ -366,6 +374,7 @@
                  continue;
              }
              connection.send("你的手牌： " + CardUtil.cardsToString(playerState.getCards()));
+             System.out.println(playerState.getPlayerId()+":"+CardUtil.cardsToString(playerState.getCards()));
          }
      }
 
@@ -383,7 +392,9 @@
              while ((msg = player.getReader()
                      .readLine()) != null) {
                  msg = msg.trim();
+                 System.out.println("----------------------");
                  System.out.println("收到玩家 " + player.getPlayerId() + " 输入：" + msg);
+                 System.out.println(player.getPlayerId()+"+"+currentPlayerId);
 
                  synchronized (ACTION_LOCK) {
                      // 不是当前轮到的玩家，直接拒绝
@@ -481,6 +492,8 @@
                  return "1.叫地主 2.不叫";
              case ROB_LANDLORD:
                  return "1.抢地主 2.不抢";
+             case PLAYING:
+                 return "到你讲话 输入PASS则过牌";
 
              default:
                  return "";

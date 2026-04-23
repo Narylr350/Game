@@ -30,38 +30,48 @@ public class PlayerClient {
         final int port = 8888;
 
         try {
-
-//            inputselect();
+            // ===== 1. 获取玩家输入的名字 =====
             System.out.println("请输入名字");
             String name = scanner.nextLine();
 
-//            System.out.println("密码");
-//            String password = scanner.nextLine();
-
-            //登录or注册
+            // ===== 2. 登录/注册逻辑（当前未实现，仅预留结构）=====
             while (true){
-                break;
+                // 这里本应调用 inputselect() 进行登录或注册
+                break;  // 当前直接跳过
             }
 
-            Socket socket = new Socket(host, port);
+            // ===== 3. 建立客户端与服务器的Socket连接 =====
+            Socket socket = connectServer(host, port);
+            if (socket==null){
+                System.out.println("连不上");
+            }
             System.out.println("已经连接服务器");
 
+            // ===== 4. 创建输出流，用于向服务器发送数据 =====
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+
+            // ===== 5. 启动一个独立线程，用于接收服务器消息 =====
             startMessageReader(socket);
 
+            // ===== 6. 连接成功后，先把玩家名字发送给服务器（用于注册玩家）=====
             writer.println(name);
 
+            // ===== 7. 主线程循环：持续读取用户输入并发送给服务器 =====
             while (true) {
                 String input = scanner.nextLine();
-                writer.println(input);
+                writer.println(input);  // 发送给服务器
 
+                // ===== 8. 输入exit时退出客户端 =====
                 if ("exit".equalsIgnoreCase(input)) {
                     break;
                 }
             }
+
+            // ===== 9. 关闭资源 =====
             writer.close();
             socket.close();
             scanner.close();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -89,7 +99,24 @@ public class PlayerClient {
             }
         }).start();
     }
-    public static void inputselect(){
+    private static Socket connectServer(String host, int port) {
+        while (true) {
+            try {
+                System.out.println("正在尝试连接服务器...");
+                Socket socket = new Socket(host, port);
+                System.out.println("服务器连接成功！");
+                return socket; // 连接成功，返回socket
+            } catch (Exception e) {
+                System.out.println("服务器未启动或连接失败，3秒后重试...");
+                try {
+                    Thread.sleep(3000); // 等待3秒再重连
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+    private static void inputselect(){
 
         while (true){
             System.out.println("1.登录 2.注册 3.exit");
