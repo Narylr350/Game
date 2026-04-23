@@ -52,7 +52,7 @@ public class PlayFlowDebugMain {
                     + (room.getPlayingState().getLastPlayedCards() == null
                     ? "null"
                     : CardUtil.cardsToString(room.getPlayingState().getLastPlayedCards())));
-            System.out.println("请输入动作：直接输入牌面表示出牌，输入 pass 表示不出，输入 exit 结束：");
+            System.out.println("请输入动作：直接输入牌面表示出牌，空行或 pass 表示不出，输入 exit 结束：");
 
             String input = scanner.nextLine().trim();
             if ("exit".equalsIgnoreCase(input)) {
