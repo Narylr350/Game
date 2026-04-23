@@ -141,6 +141,9 @@ public class PlayFlowDebugMain {
         System.out.println("是否成功 = " + result.isSuccess());
         System.out.println("事件类型 = " + result.getEventType());
         System.out.println("结果消息 = " + result.getMessage());
+        if (!result.getPlayerMessages().isEmpty()) {
+            System.out.println("结算消息 = " + result.getPlayerMessages());
+        }
         System.out.println("当前操作玩家ID = " + room.getCurrentPlayerId());
         System.out.println("玩家" + playerId + " 剩余手牌 = "
                 + CardUtil.cardsToString(room.getPlayerById(playerId).getCards()));

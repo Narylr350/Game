@@ -84,13 +84,17 @@ public class PlayingRuleChecker {
         //炸弹特殊判断
         if (!lastCardGroup.getType().equals(CardType.BOMB)
                 && !lastCardGroup.getType().equals(CardType.ROCKET)
-                && currentCardGroup.getType().equals(CardType.BOMB)
-                && (currentCardGroup.getMainRank() > lastCardGroup.getMainRank())){
+                && currentCardGroup.getType().equals(CardType.BOMB)){
             return PlayCheckResult.VALID;
+        }
+        if (lastCardGroup.getType().equals(CardType.BOMB)
+                && currentCardGroup.getType().equals(CardType.BOMB)
+                && (currentCardGroup.getMainRank() <= lastCardGroup.getMainRank())){
+            return PlayCheckResult.NOT_STRONGER_THAN_LAST;
         }
         //判断牌型是否一致
         if (currentCardGroup.getType() != lastCardGroup.getType()
-                && currentCardGroup.getSize() != lastCardGroup.getSize()) {
+                || currentCardGroup.getSize() != lastCardGroup.getSize()) {
             return PlayCheckResult.CARD_TYPE_MISMATCH;
         }
         //判断牌是否大过上家

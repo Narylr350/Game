@@ -2,6 +2,10 @@ package game.model;
 
 import game.enumtype.GameEventType;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * 游戏动作处理结果类。
  * <p>
@@ -14,6 +18,7 @@ public class GameResult {
     private final String message;
     private final GameEventType eventType;
     private final Integer sendToPlayerId;
+    private final Map<Integer, String> playerMessages;
 
     /**
      * 创建游戏动作结果对象。
@@ -24,10 +29,15 @@ public class GameResult {
      * @param sendToPlayerId 目标玩家ID
      */
     private GameResult(boolean success, String message, GameEventType eventType, Integer sendToPlayerId) {
+        this(success, message, eventType, sendToPlayerId, Map.of());
+    }
+
+    private GameResult(boolean success, String message, GameEventType eventType, Integer sendToPlayerId, Map<Integer, String> playerMessages) {
         this.success = success;
         this.message = message;
         this.eventType = eventType;
         this.sendToPlayerId = sendToPlayerId;
+        this.playerMessages = Collections.unmodifiableMap(new LinkedHashMap<>(playerMessages));
     }
 
     /**
@@ -116,13 +126,20 @@ public class GameResult {
                 null);
     }
 
-    public static GameResult highestCardDecided(String message){
+    /**
+     * 创建游戏结算结果。
+     *
+     * @param message 公共结算消息
+     * @param playerMessages 每个玩家收到的结算消息
+     * @return 游戏结算结果对象
+     */
+    public static GameResult gameSettled(String message, Map<Integer, String> playerMessages) {
         return new GameResult(
                 true,
                 message,
-                GameEventType.HIGHEST_CARD_DECIDED,
-                null
-        );
+                GameEventType.GAME_SETTLED,
+                null,
+                playerMessages);
     }
     /**
      * 判断动作是否被成功处理。
@@ -158,5 +175,14 @@ public class GameResult {
      */
     public Integer getSendToPlayerId() {
         return sendToPlayerId;
+    }
+
+    /**
+     * 获取每个玩家独立收到的结算消息。
+     *
+     * @return 玩家ID到消息内容的映射
+     */
+    public Map<Integer, String> getPlayerMessages() {
+        return playerMessages;
     }
 }

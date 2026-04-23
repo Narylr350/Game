@@ -9,6 +9,7 @@ import game.model.GameRoom;
 import game.state.LandlordState;
 
 import java.util.List;
+import java.util.Scanner;
 
 public class LandlordFlowDebugMain {
     public static void main(String[] args) {
@@ -26,13 +27,57 @@ public class LandlordFlowDebugMain {
         room.getLandlordState().resetLandlordPhaseState();
 
         printState(room, "初始状态");
+        runInteractiveLoop(gameFlow, room);
+    }
 
-        step(gameFlow, room, new GameAction(1, ActionType.CALL, null), "玩家1 叫地主");
-        step(gameFlow, room, new GameAction(2, ActionType.CALL, null), "玩家2 抢地主");
-        step(gameFlow, room, new GameAction(3, ActionType.PASS, null), "玩家3 不抢");
+    private static void runInteractiveLoop(GameFlow gameFlow, GameRoom room) {
+        Scanner scanner = new Scanner(System.in);
 
-        // 如果你想继续观察 firstCaller 再表态，可以打开这一句
-        // step(gameFlow, room, new GameAction(1, ActionType.PASS, null), "玩家1 不抢");
+        while (true) {
+            GamePhase phase = room.getCurrentPhase();
+            if (phase == GamePhase.PLAYING) {
+                System.out.println("地主已确认，叫抢地主调试结束。");
+                printState(room, "结束状态");
+                return;
+            }
+            if (phase == GamePhase.DEALING) {
+                System.out.println("三人都不叫，需要重新发牌，叫地主调试结束。");
+                printState(room, "结束状态");
+                return;
+            }
+            if (phase != GamePhase.CALL_LANDLORD && phase != GamePhase.ROB_LANDLORD) {
+                System.out.println("当前阶段不是叫抢地主阶段，调试结束。");
+                printState(room, "结束状态");
+                return;
+            }
+
+            Integer currentPlayerId = room.getCurrentPlayerId();
+            System.out.println("==== 当前轮到玩家 " + currentPlayerId + " ====");
+            printInputTip(phase);
+
+            String input = scanner.nextLine().trim();
+            if ("exit".equalsIgnoreCase(input)) {
+                System.out.println("调试结束。");
+                return;
+            }
+
+            ActionType actionType = ActionType.parseAction(input, phase);
+            if (actionType == null) {
+                System.out.println("输入无法识别，请重新输入。");
+                System.out.println();
+                continue;
+            }
+
+            step(gameFlow, room, new GameAction(currentPlayerId, actionType, null), "玩家" + currentPlayerId + " 输入 " + input);
+        }
+    }
+
+    private static void printInputTip(GamePhase phase) {
+        if (phase == GamePhase.CALL_LANDLORD) {
+            System.out.println("请输入动作：1/叫/叫地主 表示叫地主，2/不叫 表示不叫，exit 结束：");
+            return;
+        }
+        System.out.println("请输入动作：1/抢/抢地主 表示抢地主，2/不抢 表示不抢，exit 结束：");
     }
 
     private static void step(GameFlow gameFlow, GameRoom room, GameAction action, String title) {

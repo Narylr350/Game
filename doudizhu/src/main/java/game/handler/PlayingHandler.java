@@ -2,6 +2,7 @@ package game.handler;
 
 import game.action.ActionType;
 import game.action.GameAction;
+import game.enumtype.GamePhase;
 import game.model.GameResult;
 import game.model.GameRoom;
 import game.state.PlayerState;
@@ -9,7 +10,9 @@ import game.state.PlayingState;
 import rule.play.PlayCheckResult;
 import rule.play.PlayingRuleChecker;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 出牌阶段处理器。
@@ -28,7 +31,7 @@ public class PlayingHandler {
     public GameResult handle(GameRoom room, GameAction action) {
         PlayingState playingState = room.getPlayingState();
         final int playerId = action.getPlayerId();
-        int currentPlayerId = room.getCurrentPlayerId();
+        final int currentPlayerId = room.getCurrentPlayerId();
         ActionType actionType = action.getType();
         List<Integer> cards = action.getCards();
         PlayerState currentPlayer = room.getPlayerById(currentPlayerId);
@@ -60,6 +63,9 @@ public class PlayingHandler {
                 }
                 playingState.setLastPlayedCards(cards);
                 playingState.setHighestCardPlayerId(playerId);
+                if (currentPlayer.getCards().isEmpty()) {
+                    return settleGame(room, playerId);
+                }
                 room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
                 playingState.resetPassCount();
                 return GameResult.accepted("出牌");
@@ -80,5 +86,24 @@ public class PlayingHandler {
             }
         }
         return GameResult.rejected("当前操作无效", playerId);
+    }
+
+    private GameResult settleGame(GameRoom room, int winnerId) {
+        room.setCurrentPhase(GamePhase.SETTLE);
+
+        Integer landlordPlayerId = room.getLandlordPlayerId();
+        boolean landlordWin = landlordPlayerId != null && landlordPlayerId == winnerId;
+        Map<Integer, String> playerMessages = new LinkedHashMap<>();
+
+        for (PlayerState player : room.getPlayers()) {
+            boolean landlord = landlordPlayerId != null && player.getPlayerId() == landlordPlayerId;
+            if (landlord) {
+                playerMessages.put(player.getPlayerId(), landlordWin ? "地主胜利" : "地主失败");
+            } else {
+                playerMessages.put(player.getPlayerId(), landlordWin ? "农民失败" : "农民胜利");
+            }
+        }
+
+        return GameResult.gameSettled("游戏结束，玩家 " + winnerId + " 出完手牌", playerMessages);
     }
 }
