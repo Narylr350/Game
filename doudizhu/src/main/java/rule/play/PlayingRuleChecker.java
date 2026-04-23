@@ -37,6 +37,9 @@ public class PlayingRuleChecker {
         if (GamePhase.PLAYING != room.getCurrentPhase()) {
             return PlayCheckResult.WRONG_PHASE;
         }
+        if (cards.isEmpty()){
+            return PlayCheckResult.VALID;
+        }
         if (PlayCardGroup.analyzeCards(cards)
                 .getType() == CardType.INVALID) {
             return PlayCheckResult.INVALID_CARD_PATTERN;
@@ -74,17 +77,24 @@ public class PlayingRuleChecker {
         PlayCardGroup currentCardGroup = PlayCardGroup.analyzeCards(currentCards);
         PlayCardGroup lastCardGroup = PlayCardGroup.analyzeCards(lastPlayedCards);
         //火箭特殊判断
-        if (currentCardGroup.getType()
-                .equals(CardType.BOMB) && lastCardGroup.getType()
-                .equals(CardType.ROCKET)) {
+        if (!lastCardGroup.getType().equals(CardType.ROCKET)
+                && currentCardGroup.getType().equals(CardType.ROCKET)) {
+            return PlayCheckResult.VALID;
+        }
+        //炸弹特殊判断
+        if (!lastCardGroup.getType().equals(CardType.BOMB)
+                && !lastCardGroup.getType().equals(CardType.ROCKET)
+                && currentCardGroup.getType().equals(CardType.BOMB)
+                && (currentCardGroup.getMainRank() > lastCardGroup.getMainRank())){
             return PlayCheckResult.VALID;
         }
         //判断牌型是否一致
-        if (currentCardGroup.getType() != lastCardGroup.getType()) {
+        if (currentCardGroup.getType() != lastCardGroup.getType()
+                && currentCardGroup.getSize() != lastCardGroup.getSize()) {
             return PlayCheckResult.CARD_TYPE_MISMATCH;
         }
         //判断牌是否大过上家
-        if (currentCardGroup.getMainRank() < lastCardGroup.getMainRank()) {
+        if (currentCardGroup.getMainRank() <= lastCardGroup.getMainRank()) {
             return PlayCheckResult.NOT_STRONGER_THAN_LAST;
         }
         return PlayCheckResult.VALID;

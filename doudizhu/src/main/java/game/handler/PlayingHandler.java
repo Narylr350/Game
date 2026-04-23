@@ -59,13 +59,22 @@ public class PlayingHandler {
                     return GameResult.rejected(playerId + "使用了无中生有", playerId);
                 }
                 playingState.setLastPlayedCards(cards);
-                //playingState.setHighestCardPlayerId(playerId);
-                currentPlayer.removeCards(cards);
+                playingState.setHighestCardPlayerId(playerId);
+                room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
+                playingState.resetPassCount();
                 return GameResult.accepted("出牌");
             }
             // 不出
             if (ActionType.PASS_CARD == actionType) {
-                playingState.addPassCount();
+                if (playingState.getHighestCardPlayerId() == currentPlayerId){
+                    return GameResult.rejected("该你出了",playerId);
+                }
+                playingState.incrementPassCount();
+                if (playingState.getPassCount() == 2){
+                    room.setCurrentPlayerId(playingState.getHighestCardPlayerId());
+                    playingState.resetRound();
+                    return GameResult.accepted("不出");
+                }
                 room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
                 return GameResult.accepted("不出");
             }
