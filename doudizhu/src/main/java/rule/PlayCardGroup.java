@@ -124,6 +124,15 @@ public class PlayCardGroup {
         return new PlayCardGroup(type, extractMainRank(type, ranks, countMap, size), size);
     }
 
+    /**
+     * 从给定的牌型、点数列表、计数映射和牌组大小中提取主牌点数。
+     *
+     * @param type 牌型，表示当前牌组的类型
+     * @param ranks 牌的点数列表，每个元素代表一张牌的点数值
+     * @param countMap 每个点数出现次数的映射，键为点数值，值为该点数出现的次数
+     * @param size 牌组中牌的数量
+     * @return 返回主牌点数。如果无法确定主牌点数，则返回-1
+     */
     private static int extractMainRank(CardType type, List<Integer> ranks, Map<Integer, Integer> countMap, int size) {
         return switch (type) {
             case SINGLE, PAIR, TRIPLE, BOMB, ROCKET, STRAIGHT, CONSECUTIVE_PAIRS -> maxRank(ranks);
@@ -145,6 +154,13 @@ public class PlayCardGroup {
         };
     }
 
+    /**
+     * 根据给定的计数映射和目标计数，找到具有最大键值且其值等于目标计数的键。
+     *
+     * @param countMap 一个映射，键为点数值，值为该点数出现的次数
+     * @param targetCount 目标计数，用于筛选映射中的条目
+     * @return 返回满足条件的最大键值；如果没有找到符合条件的键，则返回-1
+     */
     private static int rankByCount(Map<Integer, Integer> countMap, int targetCount) {
         return countMap.entrySet()
                 .stream()
@@ -154,6 +170,14 @@ public class PlayCardGroup {
                 .orElse(-1);
     }
 
+    /**
+     * 从给定的牌计数映射中提取飞机本体点数组合。
+     *
+     * @param countMap 每个点数出现次数的映射，键为点数值，值为该点数出现的次数
+     * @param bodyGroupCount 飞机本体组的数量
+     * @param allowBombSplit 是否允许炸弹拆分作为三张一组的情况
+     * @return 返回一个整数列表，表示找到的飞机本体点数序列；如果未找到符合条件的组合，则返回空列表
+     */
     private static List<Integer> extractAirplaneBodyRanks(Map<Integer, Integer> countMap, int bodyGroupCount, boolean allowBombSplit) {
         List<Integer> tripleRanks = countMap.entrySet()
                 .stream()
@@ -182,6 +206,12 @@ public class PlayCardGroup {
         return List.of();
     }
 
+    /**
+     * 检查给定的排序后的点数列表是否构成连续序列。
+     *
+     * @param sortedRanks 一个整数列表，表示已按升序排列的牌点数值
+     * @return 如果点数列表中的所有元素都与其前一个元素相差1，则返回true；否则返回false
+     */
     private static boolean isConsecutive(List<Integer> sortedRanks) {
         for (int i = 1; i < sortedRanks.size(); i++) {
             if (!sortedRanks.get(i)
@@ -365,13 +395,7 @@ public class PlayCardGroup {
                 || ranks.contains(CardUtil.BIG_JOKER_RANK)) {
             return false;
         }
-        for (int i = 1; i <= distinctSortRanks.size() - 1; i++) {
-            if (!distinctSortRanks.get(i)
-                    .equals(distinctSortRanks.get(i - 1) + 1)) {
-                return false;
-            }
-        }
-        return true;
+        return isConsecutive(distinctSortRanks);
     }
 
     /**
@@ -405,13 +429,7 @@ public class PlayCardGroup {
             }
         }
 
-        for (int i = 1; i <= distinctSortRanks.size() - 1; i++) {
-            if (!distinctSortRanks.get(i)
-                    .equals(distinctSortRanks.get(i - 1) + 1)) {
-                return false;
-            }
-        }
-        return true;
+        return isConsecutive(distinctSortRanks);
     }
 
     /**

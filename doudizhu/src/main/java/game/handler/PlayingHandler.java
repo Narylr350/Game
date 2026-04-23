@@ -25,7 +25,7 @@ public class PlayingHandler {
             return GameResult.rejected("是你吗你就出", playerId);
         }
         if (playCheckResult == PlayCheckResult.INVALID_CARD_PATTERN) {
-            return GameResult.rejected("什么鬼牌", playerId);
+            return GameResult.rejected("瞎几把出什么呢", playerId);
         }
         if (playCheckResult == PlayCheckResult.CARD_TYPE_MISMATCH) {
             return GameResult.rejected("牌型和上家不匹配", playerId);
@@ -42,7 +42,7 @@ public class PlayingHandler {
                     return GameResult.rejected(playerId + "使用了无中生有", playerId);
                 }
                 playingState.setLastPlayedCards(cards);
-                playingState.setHighestCardPlayerId(playerId);
+                //playingState.setHighestCardPlayerId(playerId);
                 currentPlayer.removeCards(cards);
                 return GameResult.accepted("出牌");
             }
