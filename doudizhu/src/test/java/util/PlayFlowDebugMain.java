@@ -7,6 +7,8 @@ import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
 import game.state.PlayerState;
+import rule.PlayCardGroup;
+import rule.PlayingRuleChecker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +52,7 @@ public class PlayFlowDebugMain {
                     + (room.getPlayingState().getLastPlayedCards() == null
                     ? "null"
                     : CardUtil.cardsToString(room.getPlayingState().getLastPlayedCards())));
-            System.out.println("请输入要出的牌，空行/pass 表示不出，exit 结束：");
+            System.out.println("请输入动作：直接输入牌面表示出牌，输入 pass 表示不出，输入 exit 结束：");
 
             String input = scanner.nextLine().trim();
             if ("exit".equalsIgnoreCase(input)) {
@@ -58,7 +60,14 @@ public class PlayFlowDebugMain {
                 return;
             }
 
-            if (input.isBlank() || "pass".equalsIgnoreCase(input)) {
+            ActionType actionType = ActionType.parseAction(input, GamePhase.PLAYING);
+            if (actionType == null) {
+                System.out.println("输入无法识别，请重新输入。");
+                System.out.println();
+                continue;
+            }
+
+            if (actionType == ActionType.PASS_CARD) {
                 handlePass(gameFlow, room, currentPlayerId);
                 continue;
             }
@@ -70,6 +79,9 @@ public class PlayFlowDebugMain {
     private static void handlePlay(GameFlow gameFlow, GameRoom room, int playerId, String input, PlayerState player) {
         try {
             List<Integer> cards = new ArrayList<>(CardUtil.stringToCards(input, player.getCards()));
+            System.out.println("==== 玩家" + playerId + " 出牌预览 ====");
+            System.out.println(buildPlayPreview(room, input, cards));
+
             GameAction action = new GameAction(playerId, ActionType.PLAY_CARD, cards);
             GameResult result = gameFlow.handlePlayerAction(room, action);
 
@@ -83,6 +95,38 @@ public class PlayFlowDebugMain {
             System.out.println("输入无效 = " + e.getMessage());
             System.out.println();
         }
+    }
+
+    static String buildPlayPreview(GameRoom room, String input, List<Integer> cards) {
+        StringBuilder builder = new StringBuilder();
+        PlayCardGroup currentGroup = PlayCardGroup.analyzeCards(cards);
+        List<Integer> lastPlayedCards = room.getPlayingState().getLastPlayedCards();
+
+        builder.append("原始输入 = ").append(input).append(System.lineSeparator());
+        builder.append("解析后牌ID = ").append(cards).append(System.lineSeparator());
+        builder.append("解析后牌面 = ").append(CardUtil.cardsToString(cards)).append(System.lineSeparator());
+        appendGroupInfo(builder, "当前输入", currentGroup);
+
+        if (lastPlayedCards == null || lastPlayedCards.isEmpty()) {
+            builder.append("上一手牌面 = null").append(System.lineSeparator());
+            builder.append("上一手牌型 = null").append(System.lineSeparator());
+            builder.append("上一手主值 = -1").append(System.lineSeparator());
+            builder.append("上一手张数 = 0").append(System.lineSeparator());
+        } else {
+            builder.append("上一手牌ID = ").append(lastPlayedCards).append(System.lineSeparator());
+            builder.append("上一手牌面 = ").append(CardUtil.cardsToString(lastPlayedCards)).append(System.lineSeparator());
+            appendGroupInfo(builder, "上一手", PlayCardGroup.analyzeCards(lastPlayedCards));
+        }
+
+        builder.append("规则检查结果 = ")
+                .append(PlayingRuleChecker.checkPlay(room, cards));
+        return builder.toString();
+    }
+
+    private static void appendGroupInfo(StringBuilder builder, String prefix, PlayCardGroup cardGroup) {
+        builder.append(prefix).append("牌型 = ").append(cardGroup.getType()).append(System.lineSeparator());
+        builder.append(prefix).append("主值 = ").append(cardGroup.getMainRank()).append(System.lineSeparator());
+        builder.append(prefix).append("张数 = ").append(cardGroup.getSize()).append(System.lineSeparator());
     }
 
     private static void handlePass(GameFlow gameFlow, GameRoom room, int playerId) {
