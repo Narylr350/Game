@@ -13,29 +13,28 @@ import game.state.PlayerState;
 public class LandlordRuleChecker {
     /**
      * 验证是否可以叫地主。
-     *
+     * <p>
      * 该方法用于验证当前游戏房间的状态是否允许玩家叫地主。具体规则如下：
      * - 房间不能为空。
      * - 当前阶段必须是叫地主或抢地主阶段。
      * - 不能有已确定的地主。
      *
      * @param room 游戏房间对象，包含房间的所有状态信息
-     * @throws IllegalStateException 如果验证失败，则抛出此异常
+     * @return 返回地主阶段检查结果。业务非法状态通过返回值表达，只有room为空这类程序错误才抛异常
+     * @throws IllegalStateException 当room为null时抛出
      */
-    public static void validateCanCallLandlord(GameRoom room) {
-        // 房间不能为空
+    public static LandlordCheckResult validateCanCallLandlord(GameRoom room) {
         if (room == null) {
             throw new IllegalStateException("房间不能为空");
         }
-        // 当前阶段必须是叫地主或抢地主阶段
         if (room.getCurrentPhase() != GamePhase.CALL_LANDLORD && room.getCurrentPhase() != GamePhase.ROB_LANDLORD) {
-           throw new IllegalStateException("必须为CALL_LANDLORD或ROB_LANDLORD阶段");
+            return LandlordCheckResult.WRONG_PHASE;
         }
-        // 不能有已确定的地主
         for (PlayerState player : room.getPlayers()) {
             if (player.isLandlord()) {
-                throw new IllegalStateException("该阶段不能有地主");
+                return LandlordCheckResult.LANDLORD_ALREADY_DECIDED;
             }
         }
+        return LandlordCheckResult.VALID;
     }
 }

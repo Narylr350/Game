@@ -11,7 +11,20 @@ import rule.PlayingRuleChecker;
 
 import java.util.List;
 
+/**
+ * 出牌阶段处理器。
+ * <p>
+ * 负责把出牌规则检查结果映射成对客户端可见的 GameResult。
+ * </p>
+ */
 public class PlayingHandler {
+    /**
+     * 处理出牌阶段的玩家动作。
+     *
+     * @param room 游戏房间对象
+     * @param action 玩家动作
+     * @return 处理结果
+     */
     public GameResult handle(GameRoom room, GameAction action) {
         PlayingState playingState = room.getPlayingState();
         final int playerId = action.getPlayerId();
@@ -23,6 +36,10 @@ public class PlayingHandler {
 
         if (currentPlayerId != playerId) {
             return GameResult.rejected("是你吗你就出", playerId);
+        }
+        // 出牌阶段的业务非法状态统一返回 rejected，而不是依赖异常让服务端兜底。
+        if (playCheckResult == PlayCheckResult.WRONG_PHASE) {
+            return GameResult.rejected("当前阶段不能出牌", playerId);
         }
         if (playCheckResult == PlayCheckResult.INVALID_CARD_PATTERN) {
             return GameResult.rejected("瞎几把出什么呢", playerId);

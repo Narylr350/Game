@@ -7,6 +7,7 @@ import game.GameRoom;
 import game.action.ActionType;
 import game.action.GameAction;
 import game.state.LandlordState;
+import rule.LandlordCheckResult;
 import rule.LandlordRuleChecker;
 
 /**
@@ -36,7 +37,16 @@ public class CallLandlordHandler {
         final int currentPlayerId = room.getCurrentPlayerId();
         ActionType actionType = action.getType();
 
-        LandlordRuleChecker.validateCanCallLandlord(room);
+        LandlordCheckResult landlordCheckResult = LandlordRuleChecker.validateCanCallLandlord(room);
+
+        // 地主阶段的业务非法状态统一返回 rejected，而不是依赖异常让服务端兜底。
+        if (landlordCheckResult == LandlordCheckResult.WRONG_PHASE) {
+            return GameResult.rejected("当前阶段不能叫地主", playerId);
+        }
+
+        if (landlordCheckResult == LandlordCheckResult.LANDLORD_ALREADY_DECIDED) {
+            return GameResult.rejected("地主已确定", playerId);
+        }
 
         if (actionType == null) {
             return GameResult.rejected("你在干赣神魔", playerId);

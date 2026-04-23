@@ -25,7 +25,7 @@ public class LandlordState {
     }
 
     public void incrementCallPassCount() {
-        callPassCount++;
+        ++callPassCount;
     }
 
     public List<Integer> getCallPassPlayerIds() {

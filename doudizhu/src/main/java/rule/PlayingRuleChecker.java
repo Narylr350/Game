@@ -24,16 +24,18 @@ public class PlayingRuleChecker {
      * @param cards 玩家要出的牌列表
      * @return 返回一个PlayCheckResult枚举值，表示出牌检查的结果：
      *         - VALID：当前出牌有效
+     *         - WRONG_PHASE：当前不是出牌阶段
      *         - INVALID_CARD_PATTERN：出牌模式无效
      *         - CARD_TYPE_MISMATCH：牌型不匹配
      *         - NOT_STRONGER_THAN_LAST：当前出牌没有上一手大
+     * @throws IllegalStateException 当room为null时抛出
      */
     public static PlayCheckResult checkPlay(GameRoom room, List<Integer> cards) {
         if (room == null) {
             throw new IllegalStateException("房间不能为空");
         }
         if (GamePhase.PLAYING != room.getCurrentPhase()) {
-            throw new IllegalStateException("只能为PLAYING阶段");
+            return PlayCheckResult.WRONG_PHASE;
         }
         if (PlayCardGroup.analyzeCards(cards)
                 .getType() == CardType.INVALID) {
