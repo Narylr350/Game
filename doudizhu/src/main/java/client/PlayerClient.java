@@ -92,6 +92,10 @@ public class PlayerClient {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 String message;
                 while ((message = reader.readLine()) != null) {
+                    //预留退出
+//                    if("GAMEOVER".equals(message)){
+//                        System.exit(0);
+//                    }
                     System.out.println(message);
                 }
             } catch (Exception e) {
