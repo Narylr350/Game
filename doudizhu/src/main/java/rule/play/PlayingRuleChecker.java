@@ -31,22 +31,22 @@ public class PlayingRuleChecker {
      * @throws IllegalStateException 当room为null时抛出
      */
     public static PlayCheckResult checkPlay(GameRoom room, List<Integer> cards) {
-//        if (room == null) {
-//            throw new IllegalStateException("房间不能为空");
-//        }
-//        if (GamePhase.PLAYING != room.getCurrentPhase()) {
-//            return PlayCheckResult.WRONG_PHASE;
-//        }
-//        if (cards.isEmpty()){
-//            return PlayCheckResult.VALID;
-//        }
-//        if (PlayCardGroup.analyzeCards(cards)
-//                .getType() == CardType.INVALID) {
-//            return PlayCheckResult.INVALID_CARD_PATTERN;
-//        }
-//        if (hasLastPlay(room)) {
-//            return canBeat(room, cards);
-//        }
+        if (room == null) {
+            throw new IllegalStateException("房间不能为空");
+        }
+        if (GamePhase.PLAYING != room.getCurrentPhase()) {
+            return PlayCheckResult.WRONG_PHASE;
+        }
+        if (cards.isEmpty()){
+            return PlayCheckResult.VALID;
+        }
+        if (PlayCardGroup.analyzeCards(cards)
+                .getType() == CardType.INVALID) {
+            return PlayCheckResult.INVALID_CARD_PATTERN;
+        }
+        if (hasLastPlay(room)) {
+            return canBeat(room, cards);
+        }
         return PlayCheckResult.VALID;
     }
 
