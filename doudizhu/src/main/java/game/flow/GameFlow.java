@@ -99,6 +99,21 @@ public class GameFlow {
     }
 
     /**
+     * 从旧房间开始创建一个新的游戏房间。
+     * 此方法首先收集旧房间中的玩家名称，然后重新发牌并初始化新房间，
+     * 最后设置当前阶段为叫地主，并返回新创建的游戏房间对象。
+     *
+     * @param oldRoom 旧的游戏房间对象
+     * @return 新创建的游戏房间对象
+     */
+    public GameRoom startNewRoom(GameRoom oldRoom) {
+        DealResult dealResult = deal(collectPlayerNames(oldRoom));
+        GameRoom room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
+        room.setCurrentPhase(GamePhase.DEALING);
+        return startCallLandLord(room);
+    }
+
+    /**
      * 进入叫地主阶段。
      * <p>
      * 重置地主状态，并随机选择一个玩家作为起始叫地主的人。
