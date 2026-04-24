@@ -26,6 +26,7 @@ public class PlayerClient {
      */
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+//        final String host = "192.168.214.17";
         final String host = "127.0.0.1";
         final int port = 8888;
 

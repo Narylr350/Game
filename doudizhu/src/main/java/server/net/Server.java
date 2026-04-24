@@ -18,6 +18,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -113,6 +114,8 @@ public class Server {
     private static void runGameFlow() {
         landlordState = currentRoom.getLandlordState();
 
+        //先发手牌
+        sendOpeningHands(currentRoom);
         while (true) {
             if (currentRoom == null) {
                 logServer("当前房间为空，流程结束");
@@ -137,6 +140,8 @@ public class Server {
             // 只在每轮开始时打印必要状态，避免散落多处的临时调试输出。
             logTurnStart(playerId, gamePhase);
 
+
+            //阻断主进程
             Result result = waitPlayerAction(playerId, gamePhase);
             if (result == null) {
                 logServer("等待玩家输入失败，流程结束");
@@ -234,7 +239,11 @@ public class Server {
 
         if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED) {
             // 只有合法动作才向其他玩家同步动作内容。
-            broadcast("玩家 " + playerId + "：" + input, playerId);
+            //将输入的值变为索引  列如 4  变成 4的索引 CardUtil.stringToCards
+            Collection<Integer> integers = CardUtil.stringToCards(input, currentRoom.getPlayerById(playerId).getCards());
+            //将索引变为字符串输出给其他人  4 变成 4♥️ CardUtil.cardsToString
+            broadcast("玩家id:" + playerId +" name:"+PLAYERS.get(playerId - 1).getName()+ "：\n" + CardUtil.cardsToString(integers),playerId);
+
         } else if (gameResult.getEventType() == GameEventType.ACTION_REJECTED) {
             // 非法出牌只提示操作者本人，不影响其他玩家。
             broadcast(playerId, gameResult.getMessage());
@@ -514,7 +523,7 @@ public class Server {
             case ROB_LANDLORD:
                 return "1.抢地主 2.不抢";
             case PLAYING:
-                return "到你讲话，输入 PASS 则过牌";
+                return "到你讲话，输入 PASS 或 空格 则过牌";
             default:
                 return "";
         }
@@ -542,7 +551,7 @@ public class Server {
             pendingResult = null;
 
             // 通知所有玩家当前轮到谁，只给当前玩家发送输入提示。
-            broadcast("系统：当前轮到玩家 " + currentPlayerId + " 操作");
+            broadcast("系统：当前轮到玩家id:" + currentPlayerId +" name:"+PLAYERS.get(playerId - 1).getName()+ " 操作");
             broadcast(currentPlayerId, getMessage(type));
 
             // 主线程阻塞等待，直到客户端线程提交结果。
