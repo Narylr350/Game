@@ -44,6 +44,11 @@ public class PlayFlowDebugMain {
                 return;
             }
 
+            if (room.getCurrentPhase() == GamePhase.SETTLE){
+                System.out.println("游戏结束");
+                return;
+            }
+
             System.out.println("==== 当前轮到玩家 " + currentPlayerId + " ====");
             System.out.println("当前阶段 = " + room.getCurrentPhase());
             System.out.println("地主玩家ID = " + room.getLandlordPlayerId());
@@ -88,9 +93,6 @@ public class PlayFlowDebugMain {
             System.out.println("==== 玩家" + playerId + " 出牌: " + input + " ====");
             printResult(room, result, playerId);
 
-            if (result.isSuccess()) {
-                room.setCurrentPlayerId(room.getNextPlayerId(playerId));
-            }
         } catch (IllegalArgumentException e) {
             System.out.println("输入无效 = " + e.getMessage());
             System.out.println();
