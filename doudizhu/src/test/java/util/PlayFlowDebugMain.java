@@ -54,9 +54,9 @@ public class PlayFlowDebugMain {
             System.out.println("地主玩家ID = " + room.getLandlordPlayerId());
             System.out.println("当前手牌 = " + CardUtil.cardsToString(currentPlayer.getCards()));
             System.out.println("上一手出的牌 = "
-                    + (room.getPlayingState().getLastPlayedCards() == null
+                    + (room.getPlayingState().getRecentPlayedCards() == null
                     ? "null"
-                    : CardUtil.cardsToString(room.getPlayingState().getLastPlayedCards())));
+                    : CardUtil.cardsToString(room.getPlayingState().getRecentPlayedCards())));
             System.out.println("请输入动作：直接输入牌面表示出牌，空行或 pass 表示不出，输入 exit 结束：");
 
             String input = scanner.nextLine().trim();
@@ -150,9 +150,9 @@ public class PlayFlowDebugMain {
         System.out.println("玩家" + playerId + " 剩余手牌 = "
                 + CardUtil.cardsToString(room.getPlayerById(playerId).getCards()));
         System.out.println("上一手出的牌 = "
-                + (room.getPlayingState().getLastPlayedCards() == null
+                + (room.getPlayingState().getRecentPlayedCards() == null
                 ? "null"
-                : CardUtil.cardsToString(room.getPlayingState().getLastPlayedCards())));
+                : CardUtil.cardsToString(room.getPlayingState().getRecentPlayedCards())));
         System.out.println("连续不出次数 = " + room.getPlayingState().getPassCount());
         System.out.println();
     }

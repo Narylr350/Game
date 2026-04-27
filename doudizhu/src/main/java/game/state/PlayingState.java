@@ -6,6 +6,15 @@ public class PlayingState {
     private List<Integer> lastPlayedCards;    // 上一手出的牌
     private int passCount;                    // 连续过牌次数
     private Integer highestCardPlayerId;      // 最大牌的拥有者ID
+    private List<Integer> recentPlayedCards;  // 当前牌
+
+    public List<Integer> getRecentPlayedCards() {
+        return recentPlayedCards;
+    }
+
+    public void setRecentPlayedCards(List<Integer> recentPlayedCards) {
+        this.recentPlayedCards = recentPlayedCards;
+    }
 
     public Integer getHighestCardPlayerId() {
         return highestCardPlayerId;
@@ -36,7 +45,7 @@ public class PlayingState {
     /**
      * 重置出牌阶段的状态。
      * <p>
-     * 该方法将上一手出牌的玩家ID、上一手出的牌以及连续过牌次数全部重置为初始状态。
+     * 该方法将上一手出的牌以及连续过牌次数重置为初始状态。
      * 通常在一轮出牌结束后调用此方法，以便开始新的一轮出牌。
      * </p>
      */

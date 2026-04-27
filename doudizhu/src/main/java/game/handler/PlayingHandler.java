@@ -57,11 +57,12 @@ public class PlayingHandler {
         if (playCheckResult == PlayCheckResult.VALID) {
             // 出牌
             if (ActionType.PLAY_CARD == actionType) {
+                playingState.setRecentPlayedCards(cards);
+                playingState.setLastPlayedCards(cards);
                 boolean removed = currentPlayer.removeCards(cards);
                 if (!removed) {
                     return GameResult.rejected(playerId + "使用了无中生有", playerId);
                 }
-                playingState.setLastPlayedCards(cards);
                 playingState.setHighestCardPlayerId(playerId);
                 if (currentPlayer.getCards().isEmpty()) {
                     return settleGame(room, playerId);
@@ -96,8 +97,7 @@ public class PlayingHandler {
         Map<Integer, String> playerMessages = new LinkedHashMap<>();
 
         for (PlayerState player : room.getPlayers()) {
-            boolean landlord = landlordPlayerId != null && player.getPlayerId() == landlordPlayerId;
-            if (landlord) {
+            if (landlordPlayerId != null && player.getPlayerId() == landlordPlayerId) {
                 playerMessages.put(player.getPlayerId(), landlordWin ? "地主胜利" : "地主失败");
             } else {
                 playerMessages.put(player.getPlayerId(), landlordWin ? "农民失败" : "农民胜利");
