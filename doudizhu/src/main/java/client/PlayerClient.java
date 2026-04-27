@@ -31,9 +31,11 @@ public class PlayerClient {
         final int port = 8888;
 
         try {
-            Start start = new Start();
-            String name = start.start();
+//            Start start = new Start();
+//            String name = start.start();
             // ===== 1. 获取玩家输入的名字 =====
+
+            String name = "123";
 
 
 

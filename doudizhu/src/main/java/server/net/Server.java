@@ -170,7 +170,7 @@ public class Server {
                 }
 
                 GameResult gameResult = GAME_FLOW.handlePlayerAction(currentRoom, action);
-                handlePlayingResult(playerId, result.getMessage(), gameResult);
+                handlePlayingResult(playerId, action, gameResult);
             } else {
 
                 action = new GameAction(result.getPlayerId(), actionType, null);
@@ -226,10 +226,10 @@ public class Server {
      * </p>
      *
      * @param playerId   当前玩家ID
-     * @param input      客户端原始输入
+     * @param action      客户端原始输入
      * @param gameResult GameFlow 返回结果
      */
-    private static void handlePlayingResult(int playerId, String input, GameResult gameResult) {
+    private static void handlePlayingResult(int playerId, GameAction action, GameResult gameResult) {
         if (gameResult == null) {
             logServer("出牌处理返回空，流程继续等待下一轮");
             return;
@@ -237,35 +237,33 @@ public class Server {
 
         logGameResult(playerId, gameResult);
 
-        if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED) {
-            // 只有合法动作才向其他玩家同步动作内容。
-            //将输入的值变为索引  列如 4  变成 4的索引 CardUtil.stringToCards
-            Collection<Integer> integers = CardUtil.stringToCards(input, currentRoom.getPlayerById(playerId).getCards());
-            //将索引变为字符串输出给其他人  4 变成 4♥️ CardUtil.cardsToString
-            broadcast("玩家id:" + playerId +" name:"+PLAYERS.get(playerId - 1).getName()+ "：\n" + CardUtil.cardsToString(integers),playerId);
-
-        } else if (gameResult.getEventType() == GameEventType.ACTION_REJECTED) {
-            // 非法出牌只提示操作者本人，不影响其他玩家。
-            broadcast(playerId, gameResult.getMessage());
-        }
-
         PlayerState playerState = currentRoom.getPlayerById(playerId);
         if (playerState != null) {
-            // 每次合法或非法处理后，都把当前手牌重新发给操作者，避免客户端显示和服务端状态不一致。
-            if (playerState.getCards().size()==0){
-                // 获取所有键，再根据键取值
-                Set set =gameResult.getPlayerMessages().keySet();
-                for (Object key : set) {
-                    Object val = gameResult.getPlayerMessages().get(key);
-                    broadcast((Integer)key,  val.toString());
-//                    System.out.println(key + ":" + val);
-                }
+
+            if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED) {
+                Collection<Integer> playedCards = action.getCards();
+
+                broadcast(
+                        "玩家id:" + playerId
+                                + " name:" + PLAYERS.get(playerId - 1).getName()
+                                + "：\n" + CardUtil.cardsToString(playedCards),
+                        playerId
+                );
+
+            } else if (gameResult.getEventType() == GameEventType.ACTION_REJECTED) {
+                broadcast(playerId, gameResult.getMessage());
             }
-            else {
+
+            if (playerState.getCards().isEmpty()) {
+                Set<Integer> set = gameResult.getPlayerMessages().keySet();
+                for (Integer key : set) {
+                    String val = gameResult.getPlayerMessages().get(key);
+                    broadcast(key, val);
+                }
+            } else {
                 broadcast(playerId, "你的手牌：\n" + CardUtil.cardsToString(playerState.getCards()));
                 logPlayerCards(playerState, "玩家处理后手牌");
             }
-
         }
 
         logRoomState("出牌处理后");

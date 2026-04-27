@@ -1,5 +1,6 @@
  package server.net;
 
+ import game.action.GameAction;
  import game.enumtype.GamePhase;
 
  /**
