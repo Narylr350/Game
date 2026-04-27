@@ -130,13 +130,6 @@ public class Server {
             // 这里每次重新获取阶段，而不是用旧变量
             GamePhase gamePhase = currentRoom.getCurrentPhase();
 
-
-            if (gamePhase == GamePhase.SETTLE) {
-                logServer("当前阶段为 SETTLE，游戏结束");
-                broadcast("结束了");
-                return;
-            }
-
             // 只在每轮开始时打印必要状态，避免散落多处的临时调试输出。
             logTurnStart(playerId, gamePhase);
 
@@ -155,13 +148,13 @@ public class Server {
                 continue;
             }
 
-            GameAction action = null;
             if (gamePhase == GamePhase.SETTLE){
-                GameResult gameResult = GAME_FLOW.handlePlayerAction(currentRoom, action);
+                GameResult gameResult = GAME_FLOW.handlePlayerAction(currentRoom, null);
                 broadcast(currentPlayerId,gameResult.getPlayerMessages().get(currentPlayerId));
                 System.out.println("结束了");
                 return;
             }
+            GameAction action;
             if (gamePhase == GamePhase.PLAYING) {
                 action = buildPlayingAction(playerId, actionType, result.getMessage());
                 if (action == null) {
