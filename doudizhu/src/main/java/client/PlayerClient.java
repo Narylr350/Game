@@ -26,13 +26,16 @@ public class PlayerClient {
      */
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+//        final String host = "192.168.214.17";
         final String host = "127.0.0.1";
         final int port = 8888;
 
         try {
+            Start start = new Start();
+            String name = start.start();
             // ===== 1. 获取玩家输入的名字 =====
-            System.out.println("请输入名字");
-            String name = scanner.nextLine();
+
+
 
             // ===== 2. 登录/注册逻辑（当前未实现，仅预留结构）=====
             while (true){
@@ -117,28 +120,6 @@ public class PlayerClient {
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
-            }
-        }
-    }
-    private static void inputselect(){
-
-        while (true){
-            System.out.println("1.登录 2.注册 3.exit");
-            String select = input.nextLine();
-            if ("1".equals(select)){
-                //进入登录
-                System.out.println("进入登录页面");
-            }
-            else if ("2".equals(select)){
-                //进入注册
-                System.out.println("进入注册页面");
-            }
-            else if ("3".equals(select)||"exit".equals(select)){
-                //退出程序
-                System.exit(0);
-            }
-            else {
-                System.out.println("重新选择");
             }
         }
     }
