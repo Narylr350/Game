@@ -166,7 +166,13 @@ public class GameServerRunner {
                 String playerName = getPlayerName(playerId);
                 String actionResult = action.getType() == ActionType.PASS_CARD ? "不出" : "出牌";
 
-                safelyLog(() -> logActionRecord("PLAYING", playerId, playerName, rawInput, actionResult), "记录出牌动作");
+                String playedCardsSnapshot = action.getType() == ActionType.PASS_CARD
+                        ? ""
+                        : CardUtil.cardsToString(playedCards);
+                safelyLog(
+                        () -> logActionRecord("PLAYING", playerId, playerName, rawInput, actionResult, playedCardsSnapshot),
+                        "记录出牌动作"
+                );
 
                 registry.broadcastExcept(
                         playerId,
@@ -214,7 +220,10 @@ public class GameServerRunner {
             PlayerInput vote = entry.getValue();
             String playerName = getPlayerName(playerId);
             String actionResult = "1".equals(vote.message()) ? "继续下一把" : "退出";
-            safelyLog(() -> logActionRecord("SETTLE_VOTE", playerId, playerName, vote.message(), actionResult), "记录结算投票");
+            safelyLog(
+                    () -> logActionRecord("SETTLE_VOTE", playerId, playerName, vote.message(), actionResult, ""),
+                    "记录结算投票"
+            );
         }
 
         boolean allContinue = replayVotes.values().stream()
@@ -255,7 +264,10 @@ public class GameServerRunner {
                     || gameResult.getEventType() == GameEventType.REDEAL_REQUIRED) {
                 String playerName = getPlayerName(playerId);
                 String resultMessage = landlordActionResult(phase, action.getType());
-                safelyLog(() -> logActionRecord(phase.name(), playerId, playerName, rawInput, resultMessage), "记录地主阶段动作");
+                safelyLog(
+                        () -> logActionRecord(phase.name(), playerId, playerName, rawInput, resultMessage, ""),
+                        "记录地主阶段动作"
+                );
             }
             logGameResult(playerId, gameResult);
             logRoomState("叫抢地主处理后");
@@ -322,7 +334,8 @@ public class GameServerRunner {
                                  int playerId,
                                  String playerName,
                                  String actionInput,
-                                 String actionResult) {
+                                 String actionResult,
+                                 String playedCardsSnapshot) {
         if (currentSessionId == null) {
             return;
         }
@@ -335,7 +348,13 @@ public class GameServerRunner {
                 actionResult,
                 remainingCardsFor(1),
                 remainingCardsFor(2),
-                remainingCardsFor(3)
+                remainingCardsFor(3),
+                currentRoom.playerCardsSnapshot(1),
+                currentRoom.playerCardsSnapshot(2),
+                currentRoom.playerCardsSnapshot(3),
+                playedCardsSnapshot,
+                currentRoom.tableCardsSnapshot(),
+                currentRoom.holeCardsSnapshot()
         );
     }
 

@@ -13,6 +13,12 @@ public record GameActionLog(
         int remainingCardsP1,
         int remainingCardsP2,
         int remainingCardsP3,
+        String player1CardsSnapshot,
+        String player2CardsSnapshot,
+        String player3CardsSnapshot,
+        String playedCardsSnapshot,
+        String tableCardsSnapshot,
+        String holeCardsSnapshot,
         LocalDateTime createdAt
 ) {
 }

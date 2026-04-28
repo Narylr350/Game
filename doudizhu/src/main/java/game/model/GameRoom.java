@@ -4,6 +4,7 @@ import game.enumtype.GamePhase;
 import game.state.LandlordState;
 import game.state.PlayingState;
 import game.state.PlayerState;
+import util.CardUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -108,6 +109,23 @@ public class GameRoom {
 
     public PlayingState getPlayingState() {
         return playingState;
+    }
+
+    public String playerCardsSnapshot(int playerId) {
+        PlayerState player = getPlayerById(playerId);
+        return player == null ? "" : CardUtil.cardsToString(player.getCards());
+    }
+
+    public String holeCardsSnapshot() {
+        return CardUtil.cardsToString(holeCards);
+    }
+
+    public String tableCardsSnapshot() {
+        return playingState == null ? "" : CardUtil.cardsToString(playingState.currentTableCards());
+    }
+
+    public String recentPlayedCardsSnapshot() {
+        return playingState == null ? "" : CardUtil.cardsToString(playingState.recentPlayedCardsSnapshot());
     }
 
 

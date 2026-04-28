@@ -41,7 +41,13 @@ public class GameLogService {
                              String actionResult,
                              int remainingCardsP1,
                              int remainingCardsP2,
-                             int remainingCardsP3) {
+                             int remainingCardsP3,
+                             String player1CardsSnapshot,
+                             String player2CardsSnapshot,
+                             String player3CardsSnapshot,
+                             String playedCardsSnapshot,
+                             String tableCardsSnapshot,
+                             String holeCardsSnapshot) {
         int stepNo = stepCounters.compute(sessionId, (key, current) -> current == null ? 1 : current + 1);
         repository.insertAction(new GameActionLog(
                 sessionId,
@@ -54,6 +60,12 @@ public class GameLogService {
                 remainingCardsP1,
                 remainingCardsP2,
                 remainingCardsP3,
+                player1CardsSnapshot,
+                player2CardsSnapshot,
+                player3CardsSnapshot,
+                playedCardsSnapshot,
+                tableCardsSnapshot,
+                holeCardsSnapshot,
                 LocalDateTime.now()
         ));
     }
