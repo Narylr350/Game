@@ -104,6 +104,6 @@ public class PlayingHandler {
             }
         }
 
-        return GameResult.gameSettled("游戏结束，玩家 " + winnerId + " 出完手牌", playerMessages);
+        return GameResult.gameSettled("游戏结束，玩家 " + winnerId + " 出完手牌", playerMessages, winnerId);
     }
 }

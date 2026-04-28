@@ -61,9 +61,21 @@ public class AuthSession {
     }
 
     private AuthStepResult handleLoginUsername(String input) {
-        pendingUsername = input;
-        currentStep = Step.LOGIN_PASSWORD;
-        return new AuthStepResult("请输入密码：", false, null);
+        LoginDecision decision = authenticationService.prepareLogin(input);
+        if (decision.success()) {
+            authenticated = true;
+            currentStep = Step.AUTHENTICATED;
+            pendingUsername = decision.username();
+            return new AuthStepResult(decision.message(), true, decision.username());
+        }
+        if (decision.requirePassword()) {
+            pendingUsername = input;
+            currentStep = Step.LOGIN_PASSWORD;
+            return new AuthStepResult(decision.message(), false, null);
+        }
+        currentStep = Step.CHOOSE_ACTION;
+        pendingUsername = null;
+        return new AuthStepResult(decision.message(), false, null);
     }
 
     private AuthStepResult handleLoginPassword(String input) {

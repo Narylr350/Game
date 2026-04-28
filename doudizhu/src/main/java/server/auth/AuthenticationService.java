@@ -2,10 +2,13 @@ package server.auth;
 
 import util.CredentialPolicy;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
 public class AuthenticationService {
+    private static final Duration REMEMBER_LOGIN_DURATION = Duration.ofDays(7);
     private final UserRepository userRepository;
     private final CredentialPolicy credentialPolicy;
 
@@ -30,9 +33,33 @@ public class AuthenticationService {
                 return new AuthenticationResult(false, "登录失败，密码输入错误~", null);
             }
 
+            userRepository.updateLoginTime(account.getId(), LocalDateTime.now());
             return new AuthenticationResult(true, "登录成功,游戏启动~", account.getUsername());
         } catch (RepositoryAccessException e) {
             return new AuthenticationResult(false, "登录失败，请稍后再试", null);
+        }
+    }
+
+    public LoginDecision prepareLogin(String username) {
+        try {
+            Optional<UserAccount> userAccount = userRepository.findByUsername(username);
+            if (userAccount.isEmpty()) {
+                return new LoginDecision(false, false, "用户名" + username + "未注册，请先注册再登录", null);
+            }
+
+            UserAccount account = userAccount.get();
+            if (!account.isStatus()) {
+                return new LoginDecision(false, false, "用户" + username + "已禁用，请联系客服乌鲁鲁：18000000000", null);
+            }
+
+            if (canSkipPassword(account)) {
+                userRepository.updateLoginTime(account.getId(), LocalDateTime.now());
+                return new LoginDecision(true, false, "登录成功,游戏启动~", account.getUsername());
+            }
+
+            return new LoginDecision(false, true, "请输入密码：", account.getUsername());
+        } catch (RepositoryAccessException e) {
+            return new LoginDecision(false, false, "登录失败，请稍后再试", null);
         }
     }
 
@@ -48,7 +75,7 @@ public class AuthenticationService {
                 return new AuthenticationResult(false, passwordMessage, null);
             }
 
-            userRepository.save(new UserAccount(createId(), username, password, true));
+            userRepository.save(new UserAccount(createId(), username, password, true, LocalDateTime.now()));
             return new AuthenticationResult(true, "用户" + username + "注册成功！", username);
         } catch (RepositoryAccessException e) {
             return new AuthenticationResult(false, "注册失败，请稍后再试", null);
@@ -77,5 +104,13 @@ public class AuthenticationService {
             builder.append(random.nextInt(10));
         }
         return builder.toString();
+    }
+
+    private boolean canSkipPassword(UserAccount account) {
+        if (account.getLastLoginAt() == null) {
+            return false;
+        }
+        Duration duration = Duration.between(account.getLastLoginAt(), LocalDateTime.now());
+        return !duration.isNegative() && duration.compareTo(REMEMBER_LOGIN_DURATION) <= 0;
     }
 }

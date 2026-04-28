@@ -19,6 +19,7 @@ public class GameResult {
     private final GameEventType eventType;
     private final Integer sendToPlayerId;
     private final Map<Integer, String> playerMessages;
+    private final Integer winnerPlayerId;
 
     /**
      * 创建游戏动作结果对象。
@@ -29,15 +30,25 @@ public class GameResult {
      * @param sendToPlayerId 目标玩家ID
      */
     private GameResult(boolean success, String message, GameEventType eventType, Integer sendToPlayerId) {
-        this(success, message, eventType, sendToPlayerId, Map.of());
+        this(success, message, eventType, sendToPlayerId, Map.of(), null);
     }
 
     private GameResult(boolean success, String message, GameEventType eventType, Integer sendToPlayerId, Map<Integer, String> playerMessages) {
+        this(success, message, eventType, sendToPlayerId, playerMessages, null);
+    }
+
+    private GameResult(boolean success,
+                       String message,
+                       GameEventType eventType,
+                       Integer sendToPlayerId,
+                       Map<Integer, String> playerMessages,
+                       Integer winnerPlayerId) {
         this.success = success;
         this.message = message;
         this.eventType = eventType;
         this.sendToPlayerId = sendToPlayerId;
         this.playerMessages = Collections.unmodifiableMap(new LinkedHashMap<>(playerMessages));
+        this.winnerPlayerId = winnerPlayerId;
     }
 
     /**
@@ -134,12 +145,17 @@ public class GameResult {
      * @return 游戏结算结果对象
      */
     public static GameResult gameSettled(String message, Map<Integer, String> playerMessages) {
+        return gameSettled(message, playerMessages, null);
+    }
+
+    public static GameResult gameSettled(String message, Map<Integer, String> playerMessages, Integer winnerPlayerId) {
         return new GameResult(
                 true,
                 message,
                 GameEventType.GAME_SETTLED,
                 null,
-                playerMessages);
+                playerMessages,
+                winnerPlayerId);
     }
     /**
      * 判断动作是否被成功处理。
@@ -184,5 +200,9 @@ public class GameResult {
      */
     public Map<Integer, String> getPlayerMessages() {
         return playerMessages;
+    }
+
+    public Integer getWinnerPlayerId() {
+        return winnerPlayerId;
     }
 }

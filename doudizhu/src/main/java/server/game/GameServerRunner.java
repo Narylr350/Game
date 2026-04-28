@@ -11,6 +11,11 @@ import game.state.LandlordState;
 import game.state.PlayerState;
 import server.flow.PlayerInput;
 import server.flow.TurnInputCoordinator;
+import server.log.GameEndReason;
+import server.log.GameLogService;
+import server.log.JdbcGameLogRepository;
+import server.log.NoOpGameLogRepository;
+import server.log.WinnerSide;
 import server.session.PlayerSession;
 import server.session.PlayerSessionRegistry;
 import util.CardUtil;
@@ -26,19 +31,31 @@ public class GameServerRunner {
     private final PlayerSessionRegistry registry;
     private final TurnInputCoordinator coordinator;
     private final GameFlow gameFlow;
+    private final GameLogService gameLogService;
 
     private GameRoom currentRoom;
     private LandlordState landlordState;
+    private String currentSessionId;
+    private Integer settledWinnerPlayerId;
 
     public GameServerRunner(PlayerSessionRegistry registry, TurnInputCoordinator coordinator) {
+        this(registry, coordinator, createGameLogService());
+    }
+
+    GameServerRunner(PlayerSessionRegistry registry,
+                     TurnInputCoordinator coordinator,
+                     GameLogService gameLogService) {
         this.registry = registry;
         this.coordinator = coordinator;
         this.gameFlow = new GameFlow();
+        this.gameLogService = gameLogService;
     }
 
     public void run() {
         currentRoom = gameFlow.startRoom(registry.collectPlayerNames());
         landlordState = currentRoom.getLandlordState();
+        settledWinnerPlayerId = null;
+        startSessionLogging();
         logRoomState("房间创建完成");
         logServer("底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
         sendOpeningHands(currentRoom);
@@ -68,6 +85,7 @@ public class GameServerRunner {
             PlayerInput result = waitPlayerAction(playerId, gamePhase);
             if (result == null) {
                 logServer("等待玩家输入失败，流程结束");
+                safelyLog(() -> finishCurrentSession(GameEndReason.PLAYER_DISCONNECTED, settledWinnerPlayerId), "玩家掉线收尾");
                 shutdownRoom();
                 return;
             }
@@ -87,7 +105,7 @@ public class GameServerRunner {
                 }
 
                 GameResult gameResult = gameFlow.handlePlayerAction(currentRoom, action);
-                handlePlayingResult(playerId, action, gameResult);
+                handlePlayingResult(playerId, result.message(), action, gameResult);
                 if (gameResult != null && gameResult.getEventType() == GameEventType.GAME_SETTLED) {
                     continue;
                 }
@@ -95,7 +113,7 @@ public class GameServerRunner {
                 action = new GameAction(result.playerId(), actionType, null);
             }
 
-            if (!handleGameResult(playerId, action)) {
+            if (!handleGameResult(playerId, result.message(), action)) {
                 return;
             }
         }
@@ -132,7 +150,7 @@ public class GameServerRunner {
         }
     }
 
-    private void handlePlayingResult(int playerId, GameAction action, GameResult gameResult) {
+    private void handlePlayingResult(int playerId, String rawInput, GameAction action, GameResult gameResult) {
         if (gameResult == null) {
             logServer("出牌处理返回空，流程继续等待下一轮");
             return;
@@ -142,10 +160,13 @@ public class GameServerRunner {
 
         PlayerState playerState = currentRoom.getPlayerById(playerId);
         if (playerState != null) {
-            if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED) {
+            if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED
+                    || gameResult.getEventType() == GameEventType.GAME_SETTLED) {
                 Collection<Integer> playedCards = action.getCards();
-                PlayerSession session = registry.findByPlayerId(playerId);
-                String playerName = session == null ? "" : session.getPlayerName();
+                String playerName = getPlayerName(playerId);
+                String actionResult = action.getType() == ActionType.PASS_CARD ? "不出" : "出牌";
+
+                safelyLog(() -> logActionRecord("PLAYING", playerId, playerName, rawInput, actionResult), "记录出牌动作");
 
                 registry.broadcastExcept(
                         playerId,
@@ -156,6 +177,8 @@ public class GameServerRunner {
             }
 
             if (playerState.getCards().isEmpty()) {
+                settledWinnerPlayerId = gameResult.getWinnerPlayerId();
+                safelyLog(() -> finishCurrentSession(GameEndReason.NORMAL_SETTLEMENT, settledWinnerPlayerId), "结算收尾");
                 for (Map.Entry<Integer, String> entry : gameResult.getPlayerMessages().entrySet()) {
                     registry.sendToPlayer(entry.getKey(), entry.getValue());
                 }
@@ -171,6 +194,7 @@ public class GameServerRunner {
     private boolean handleReplayPhase() {
         Set<Integer> playerIds = Set.copyOf(registry.collectPlayerIds());
         if (playerIds.size() < 3) {
+            safelyLog(() -> finishCurrentSession(GameEndReason.PLAYER_EXIT_AFTER_SETTLEMENT, settledWinnerPlayerId), "结算后退出收尾");
             registry.broadcast("有玩家退出，房间结束");
             shutdownRoom();
             return false;
@@ -185,9 +209,18 @@ public class GameServerRunner {
             return false;
         }
 
+        for (Map.Entry<Integer, PlayerInput> entry : replayVotes.entrySet()) {
+            int playerId = entry.getKey();
+            PlayerInput vote = entry.getValue();
+            String playerName = getPlayerName(playerId);
+            String actionResult = "1".equals(vote.message()) ? "继续下一把" : "退出";
+            safelyLog(() -> logActionRecord("SETTLE_VOTE", playerId, playerName, vote.message(), actionResult), "记录结算投票");
+        }
+
         boolean allContinue = replayVotes.values().stream()
                 .allMatch(vote -> "1".equals(vote.message()));
         if (!allContinue) {
+            safelyLog(() -> finishCurrentSession(GameEndReason.PLAYER_EXIT_AFTER_SETTLEMENT, settledWinnerPlayerId), "结算后退出收尾");
             registry.broadcast("有玩家退出，房间结束");
             shutdownRoom();
             return false;
@@ -196,13 +229,15 @@ public class GameServerRunner {
         registry.broadcast("三位玩家都选择继续，开始下一把");
         currentRoom = gameFlow.startNewRoom(currentRoom);
         landlordState = currentRoom.getLandlordState();
+        settledWinnerPlayerId = null;
+        startSessionLogging();
         logRoomState("下一把房间创建完成");
         logServer("底牌已生成：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
         sendOpeningHands(currentRoom);
         return true;
     }
 
-    private boolean handleGameResult(Integer playerId, GameAction action) {
+    private boolean handleGameResult(Integer playerId, String rawInput, GameAction action) {
         GameResult gameResult = null;
         GamePhase phase = currentRoom.getCurrentPhase();
 
@@ -215,11 +250,19 @@ public class GameServerRunner {
             }
 
             broadcastResult(playerId, gameResult);
+            if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED
+                    || gameResult.getEventType() == GameEventType.LANDLORD_DECIDED
+                    || gameResult.getEventType() == GameEventType.REDEAL_REQUIRED) {
+                String playerName = getPlayerName(playerId);
+                String resultMessage = landlordActionResult(phase, action.getType());
+                safelyLog(() -> logActionRecord(phase.name(), playerId, playerName, rawInput, resultMessage), "记录地主阶段动作");
+            }
             logGameResult(playerId, gameResult);
             logRoomState("叫抢地主处理后");
         }
 
         if (gameResult != null && gameResult.getEventType() == GameEventType.LANDLORD_DECIDED) {
+            safelyLog(() -> gameLogService.updateLandlordPlayerId(currentSessionId, currentRoom.getLandlordPlayerId()), "更新地主");
             registry.broadcast("地主已确定：玩家 " + currentRoom.getLandlordPlayerId());
             registry.broadcast("地主底牌：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
             sendOpeningHands(currentRoom);
@@ -266,14 +309,81 @@ public class GameServerRunner {
         System.out.println("[Server] " + message);
     }
 
+    private void startSessionLogging() {
+        currentSessionId = null;
+        safelyLog(() -> currentSessionId = gameLogService.startSession(registry.collectPlayerNames()), "创建对局日志");
+    }
+
     private void shutdownRoom() {
         registry.closeAll();
     }
 
-    private void logTurnStart(Integer playerId, GamePhase phase) {
+    private void logActionRecord(String phase,
+                                 int playerId,
+                                 String playerName,
+                                 String actionInput,
+                                 String actionResult) {
+        if (currentSessionId == null) {
+            return;
+        }
+        gameLogService.appendAction(
+                currentSessionId,
+                phase,
+                playerId,
+                playerName,
+                actionInput,
+                actionResult,
+                remainingCardsFor(1),
+                remainingCardsFor(2),
+                remainingCardsFor(3)
+        );
+    }
+
+    private int remainingCardsFor(int playerId) {
+        if (currentRoom == null) {
+            return 0;
+        }
+        PlayerState playerState = currentRoom.getPlayerById(playerId);
+        return playerState == null ? 0 : playerState.getCards().size();
+    }
+
+    private void finishCurrentSession(GameEndReason endReason, Integer winnerPlayerId) {
+        if (currentSessionId == null) {
+            return;
+        }
+        Integer landlordPlayerId = currentRoom == null ? null : currentRoom.getLandlordPlayerId();
+        WinnerSide winnerSide = null;
+        if (winnerPlayerId != null && landlordPlayerId != null) {
+            winnerSide = winnerPlayerId.equals(landlordPlayerId) ? WinnerSide.LANDLORD : WinnerSide.FARMER;
+        }
+        gameLogService.finishSession(currentSessionId, landlordPlayerId, winnerSide, winnerPlayerId, endReason);
+    }
+
+    private String landlordActionResult(GamePhase phase, ActionType actionType) {
+        if (phase == GamePhase.CALL_LANDLORD) {
+            return actionType == ActionType.CALL ? "叫地主" : "不叫地主";
+        }
+        if (phase == GamePhase.ROB_LANDLORD) {
+            return actionType == ActionType.CALL ? "抢地主" : "不抢";
+        }
+        return "";
+    }
+
+    private void safelyLog(Runnable task, String scene) {
+        try {
+            task.run();
+        } catch (Exception e) {
+            logServer("对局日志写入失败：" + scene + "，" + e.getMessage());
+        }
+    }
+
+    private String getPlayerName(int playerId) {
         PlayerSession session = registry.findByPlayerId(playerId);
-        String playerName = session == null ? String.valueOf(playerId) : session.getPlayerName();
-        System.out.println(GamePromptMessages.turnConsoleTitle(playerName));
+        return session == null ? String.valueOf(playerId) : session.getPlayerName();
+    }
+
+    private void logTurnStart(Integer playerId, GamePhase phase) {
+        System.out.println(GamePromptMessages.turnConsoleTitle(getPlayerName(playerId)));
         System.out.println("当前阶段 = " + phase);
         if (currentRoom != null) {
             System.out.println("地主玩家ID = " + currentRoom.getLandlordPlayerId());
@@ -331,5 +441,14 @@ public class GameServerRunner {
     private void logPlayerCards(PlayerState playerState, String title) {
         System.out.println("[Cards] " + title + "：玩家" + playerState.getPlayerId()
                 + " = " + CardUtil.cardsToString(playerState.getCards()));
+    }
+
+    private static GameLogService createGameLogService() {
+        try {
+            return new GameLogService(new JdbcGameLogRepository());
+        } catch (Exception e) {
+            System.out.println("[Server] 对局日志初始化失败：" + e.getMessage());
+            return new GameLogService(new NoOpGameLogRepository());
+        }
     }
 }
