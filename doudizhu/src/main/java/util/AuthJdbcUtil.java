@@ -1,19 +1,21 @@
-package client.JDBC;
+package util;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-public class JDBCUtil {
+public class AuthJdbcUtil {
 
-    //加载驱动获取连接
-    public static Connection getConnection(){
-        Connection con = null;
+    public static Connection getConnection() {
+        Connection connection = null;
         String url = "jdbc:mysql://localhost:3306/doudizhu";
         String username = "root";
-        String password = "666666";
+        String password = "200518";
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            //2、获取连接
-            con = DriverManager.getConnection(url,username,password);
+            connection = DriverManager.getConnection(url, username, password);
         } catch (ClassNotFoundException e) {
             System.out.println("加载驱动失败");
             e.printStackTrace();
@@ -21,33 +23,30 @@ public class JDBCUtil {
             System.out.println("连接失败");
             e.printStackTrace();
         }
-        return con;
+        return connection;
     }
 
-    //释放资源
-    public static void close(ResultSet rs, Statement ps, Connection con){
-
-        if (rs != null) {
+    public static void close(ResultSet resultSet, Statement statement, Connection connection) {
+        if (resultSet != null) {
             try {
-                rs.close();
+                resultSet.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
-        if (ps != null) {
+        if (statement != null) {
             try {
-                ps.close();
+                statement.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
-        if (con != null) {
+        if (connection != null) {
             try {
-                con.close();
+                connection.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
     }
 }
-
