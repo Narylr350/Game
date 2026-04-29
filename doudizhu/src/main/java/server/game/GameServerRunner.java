@@ -166,11 +166,8 @@ public class GameServerRunner {
                 String playerName = getPlayerName(playerId);
                 String actionResult = action.getType() == ActionType.PASS_CARD ? "不出" : "出牌";
 
-                String playedCardsSnapshot = action.getType() == ActionType.PASS_CARD
-                        ? ""
-                        : CardUtil.cardsToString(playedCards);
                 safelyLog(
-                        () -> logActionRecord("PLAYING", playerId, playerName, rawInput, actionResult, playedCardsSnapshot),
+                        () -> logActionRecord("PLAYING", playerId, playerName, rawInput, actionResult),
                         "记录出牌动作"
                 );
 
@@ -221,7 +218,7 @@ public class GameServerRunner {
             String playerName = getPlayerName(playerId);
             String actionResult = "1".equals(vote.message()) ? "继续下一把" : "退出";
             safelyLog(
-                    () -> logActionRecord("SETTLE_VOTE", playerId, playerName, vote.message(), actionResult, ""),
+                    () -> logActionRecord("SETTLE_VOTE", playerId, playerName, vote.message(), actionResult),
                     "记录结算投票"
             );
         }
@@ -265,7 +262,7 @@ public class GameServerRunner {
                 String playerName = getPlayerName(playerId);
                 String resultMessage = landlordActionResult(phase, action.getType());
                 safelyLog(
-                        () -> logActionRecord(phase.name(), playerId, playerName, rawInput, resultMessage, ""),
+                        () -> logActionRecord(phase.name(), playerId, playerName, rawInput, resultMessage),
                         "记录地主阶段动作"
                 );
             }
@@ -334,8 +331,7 @@ public class GameServerRunner {
                                  int playerId,
                                  String playerName,
                                  String actionInput,
-                                 String actionResult,
-                                 String playedCardsSnapshot) {
+                                 String actionResult) {
         if (currentSessionId == null) {
             return;
         }
@@ -348,13 +344,7 @@ public class GameServerRunner {
                 actionResult,
                 remainingCardsFor(1),
                 remainingCardsFor(2),
-                remainingCardsFor(3),
-                currentRoom.playerCardsSnapshot(1),
-                currentRoom.playerCardsSnapshot(2),
-                currentRoom.playerCardsSnapshot(3),
-                playedCardsSnapshot,
-                currentRoom.tableCardsSnapshot(),
-                currentRoom.holeCardsSnapshot()
+                remainingCardsFor(3)
         );
     }
 

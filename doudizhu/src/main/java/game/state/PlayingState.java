@@ -12,10 +12,6 @@ public class PlayingState {
         return recentPlayedCards;
     }
 
-    public List<Integer> recentPlayedCardsSnapshot() {
-        return recentPlayedCards == null ? List.of() : List.copyOf(recentPlayedCards);
-    }
-
     public void setRecentPlayedCards(List<Integer> recentPlayedCards) {
         this.recentPlayedCards = recentPlayedCards;
     }
@@ -30,10 +26,6 @@ public class PlayingState {
 
     public List<Integer> getLastPlayedCards() {
         return lastPlayedCards;
-    }
-
-    public List<Integer> currentTableCards() {
-        return lastPlayedCards == null ? List.of() : List.copyOf(lastPlayedCards);
     }
 
     public void setLastPlayedCards(List<Integer> lastPlayedCards) {

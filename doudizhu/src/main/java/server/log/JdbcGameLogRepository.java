@@ -3,14 +3,12 @@ package server.log;
 import util.AuthJdbcUtil;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 public class JdbcGameLogRepository implements GameLogRepository {
@@ -50,16 +48,9 @@ public class JdbcGameLogRepository implements GameLogRepository {
                         remaining_cards_p1 int not null,
                         remaining_cards_p2 int not null,
                         remaining_cards_p3 int not null,
-                        player1_cards_snapshot text null,
-                        player2_cards_snapshot text null,
-                        player3_cards_snapshot text null,
-                        played_cards_snapshot text null,
-                        table_cards_snapshot text null,
-                        hole_cards_snapshot text null,
                         created_at datetime not null
                     )
                     """);
-            ensureActionSnapshotColumns(connection);
         } catch (SQLException e) {
             throw new IllegalStateException("ensure game log tables failed", e);
         } finally {
@@ -89,7 +80,7 @@ public class JdbcGameLogRepository implements GameLogRepository {
     @Override
     public void insertAction(GameActionLog actionLog) {
         executeUpdate(
-                "insert into game_action_log(session_id, step_no, phase, player_id, player_name, action_input, action_result, remaining_cards_p1, remaining_cards_p2, remaining_cards_p3, player1_cards_snapshot, player2_cards_snapshot, player3_cards_snapshot, played_cards_snapshot, table_cards_snapshot, hole_cards_snapshot, created_at) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "insert into game_action_log(session_id, step_no, phase, player_id, player_name, action_input, action_result, remaining_cards_p1, remaining_cards_p2, remaining_cards_p3, created_at) values(?,?,?,?,?,?,?,?,?,?,?)",
                 statement -> {
                     statement.setString(1, actionLog.sessionId());
                     statement.setInt(2, actionLog.stepNo());
@@ -101,13 +92,7 @@ public class JdbcGameLogRepository implements GameLogRepository {
                     statement.setInt(8, actionLog.remainingCardsP1());
                     statement.setInt(9, actionLog.remainingCardsP2());
                     statement.setInt(10, actionLog.remainingCardsP3());
-                    statement.setString(11, actionLog.player1CardsSnapshot());
-                    statement.setString(12, actionLog.player2CardsSnapshot());
-                    statement.setString(13, actionLog.player3CardsSnapshot());
-                    statement.setString(14, actionLog.playedCardsSnapshot());
-                    statement.setString(15, actionLog.tableCardsSnapshot());
-                    statement.setString(16, actionLog.holeCardsSnapshot());
-                    statement.setTimestamp(17, Timestamp.valueOf(actionLog.createdAt()));
+                    statement.setTimestamp(11, Timestamp.valueOf(actionLog.createdAt()));
                 }
         );
     }
@@ -183,34 +168,6 @@ public class JdbcGameLogRepository implements GameLogRepository {
 
     static String actionTableName() {
         return "game_action_log";
-    }
-
-    static List<String> actionSnapshotColumns() {
-        return List.of(
-                "player1_cards_snapshot",
-                "player2_cards_snapshot",
-                "player3_cards_snapshot",
-                "played_cards_snapshot",
-                "table_cards_snapshot",
-                "hole_cards_snapshot"
-        );
-    }
-
-    private void ensureActionSnapshotColumns(Connection connection) throws SQLException {
-        for (String column : actionSnapshotColumns()) {
-            if (!hasColumn(connection, actionTableName(), column)) {
-                try (Statement alterStatement = connection.createStatement()) {
-                    alterStatement.executeUpdate("alter table " + actionTableName() + " add column " + column + " text null");
-                }
-            }
-        }
-    }
-
-    private boolean hasColumn(Connection connection, String tableName, String columnName) throws SQLException {
-        DatabaseMetaData metaData = connection.getMetaData();
-        try (ResultSet resultSet = metaData.getColumns(connection.getCatalog(), null, tableName, columnName)) {
-            return resultSet.next();
-        }
     }
 
     private void executeUpdate(String sql, StatementBinder binder) {
