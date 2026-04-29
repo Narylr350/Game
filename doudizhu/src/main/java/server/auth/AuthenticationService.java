@@ -57,7 +57,7 @@ public class AuthenticationService {
                 return new LoginDecision(true, false, "登录成功,游戏启动~", account.getUsername());
             }
 
-            return new LoginDecision(false, true, "请输入密码：", account.getUsername());
+            return new LoginDecision(false, true, "请输入密码（输入 exit 返回功能菜单）：", account.getUsername());
         } catch (RepositoryAccessException e) {
             return new LoginDecision(false, false, "登录失败，请稍后再试", null);
         }
@@ -70,7 +70,7 @@ public class AuthenticationService {
                 return new AuthenticationResult(false, usernameMessage, null);
             }
 
-            String passwordMessage = credentialPolicy.validatePassword(password);
+            String passwordMessage = validatePassword(password);
             if (passwordMessage != null) {
                 return new AuthenticationResult(false, passwordMessage, null);
             }
@@ -95,6 +95,10 @@ public class AuthenticationService {
         } catch (RepositoryAccessException e) {
             return "注册失败，请稍后再试";
         }
+    }
+
+    public String validatePassword(String password) {
+        return credentialPolicy.validatePassword(password);
     }
 
     private String createId() {

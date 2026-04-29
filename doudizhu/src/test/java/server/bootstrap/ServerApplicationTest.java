@@ -59,6 +59,42 @@ class ServerApplicationTest {
         }
     }
 
+    @Test
+    void should_not_count_authenticated_player_after_disconnect_before_room_is_full() throws Exception {
+        ServerApplication application = new ServerApplication();
+        replaceAuthenticator(application, new SequentialAuthenticator());
+
+        Method acceptPlayers = ServerApplication.class.getDeclaredMethod("acceptPlayers", ServerSocket.class, int.class);
+        acceptPlayers.setAccessible(true);
+
+        Throwable[] failure = new Throwable[1];
+
+        try (ServerSocket serverSocket = new ServerSocket(0)) {
+            Thread acceptThread = new Thread(() -> {
+                try {
+                    acceptPlayers.invoke(application, serverSocket, 2);
+                } catch (Throwable throwable) {
+                    failure[0] = throwable;
+                }
+            });
+            acceptThread.start();
+
+            Socket firstClient = new Socket("127.0.0.1", serverSocket.getLocalPort());
+            assertTrue(waitForPlayerNames(application, List.of("first")), "第一个玩家应该先认证成功");
+            firstClient.close();
+            assertTrue(waitForPlayerNames(application, List.of()), "断开的候场玩家应该被移除");
+
+            try (Socket secondClient = new Socket("127.0.0.1", serverSocket.getLocalPort());
+                 Socket thirdClient = new Socket("127.0.0.1", serverSocket.getLocalPort())) {
+                acceptThread.join(2_000);
+
+                assertFalse(acceptThread.isAlive(), "两个仍在线的玩家凑齐后才应该结束接入");
+                assertEquals(List.of("second", "third"), readPlayerNames(application));
+                assertEquals(null, failure[0]);
+            }
+        }
+    }
+
     private void replaceAuthenticator(ServerApplication application, SocketAuthenticator authenticator) throws Exception {
         Field field = ServerApplication.class.getDeclaredField("authenticator");
         field.setAccessible(true);
@@ -72,6 +108,17 @@ class ServerApplicationTest {
         Object registry = field.get(application);
         Method method = registry.getClass().getDeclaredMethod("collectPlayerNames");
         return (List<String>) method.invoke(registry);
+    }
+
+    private boolean waitForPlayerNames(ServerApplication application, List<String> expectedNames) throws Exception {
+        long deadline = System.currentTimeMillis() + 1_000;
+        while (System.currentTimeMillis() < deadline) {
+            if (expectedNames.equals(readPlayerNames(application))) {
+                return true;
+            }
+            Thread.sleep(20);
+        }
+        return false;
     }
 
     private static final class BlockingAuthenticator extends SocketAuthenticator {
@@ -109,6 +156,24 @@ class ServerApplicationTest {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    private static final class SequentialAuthenticator extends SocketAuthenticator {
+        private final AtomicInteger nextName = new AtomicInteger();
+
+        private SequentialAuthenticator() {
+            super(null);
+        }
+
+        @Override
+        public String authenticate(BufferedReader reader, PrintWriter writer) {
+            return switch (nextName.incrementAndGet()) {
+                case 1 -> "first";
+                case 2 -> "second";
+                case 3 -> "third";
+                default -> "extra";
+            };
         }
     }
 }

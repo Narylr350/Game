@@ -97,7 +97,7 @@ class AuthenticationServiceTest {
 
         assertFalse(decision.success());
         assertTrue(decision.requirePassword());
-        assertEquals("请输入密码：", decision.message());
+        assertEquals("请输入密码（输入 exit 返回功能菜单）：", decision.message());
     }
 
     private static final class FailingUserRepository implements UserRepository {

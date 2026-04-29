@@ -163,6 +163,7 @@ public class GameServerRunner {
                 Collection<Integer> playedCards = action.getCards();
                 String playerName = getPlayerName(playerId);
                 String actionResult = action.getType() == ActionType.PASS_CARD ? "不出" : "出牌";
+                String remainingCardsText = GamePromptUtil.remainingCardsBroadcast(remainingCardsSummaries());
 
                 safelyLog(
                         () -> logActionRecord("PLAYING", playerId, playerName, rawInput, actionResult),
@@ -171,8 +172,9 @@ public class GameServerRunner {
 
                 registry.broadcastExcept(
                         playerId,
-                        GamePromptUtil.playedCardsBroadcast(playerName, CardUtil.cardsToString(playedCards))
+                        GamePromptUtil.playedCardsBroadcast(playerName, CardUtil.cardsToString(playedCards), remainingCardsText)
                 );
+                registry.sendToPlayer(playerId, remainingCardsText);
             } else if (gameResult.isRejected()) {
                 registry.sendToPlayer(playerId, gameResult.getMessage());
             }
@@ -352,6 +354,14 @@ public class GameServerRunner {
         }
         PlayerState playerState = currentRoom.getPlayerById(playerId);
         return playerState == null ? 0 : playerState.getCards().size();
+    }
+
+    private List<String> remainingCardsSummaries() {
+        List<String> summaries = new ArrayList<>();
+        for (PlayerSession session : registry.snapshot()) {
+            summaries.add(session.getPlayerName() + " " + remainingCardsFor(session.getPlayerId()) + "张");
+        }
+        return summaries;
     }
 
     private void finishCurrentSession(GameEndReason endReason, Integer winnerPlayerId) {

@@ -29,6 +29,9 @@ public class SocketAuthenticator {
 
             AuthStepResult result = session.handleInput(input.trim());
             writer.println(result.message());
+            if (result.exitRequested()) {
+                return null;
+            }
             if (result.authenticated()) {
                 return result.username();
             }

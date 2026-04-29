@@ -4,6 +4,7 @@ import game.enumtype.GamePhase;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -44,6 +45,35 @@ class GamePromptUtilTest {
         String message = (String) method.invoke(null, "Narylr", "");
 
         assertEquals("Narylr不出", message);
+    }
+
+    @Test
+    void should_append_remaining_cards_to_played_cards_broadcast() {
+        String message = GamePromptUtil.playedCardsBroadcast(
+                "Narylr",
+                "3♣️ 3♥️",
+                "剩余手牌：Narylr 15张，meme 12张，Test 9张"
+        );
+
+        assertEquals("Narylr出了：\n3♣️ 3♥️\n剩余手牌：Narylr 15张，meme 12张，Test 9张", message);
+    }
+
+    @Test
+    void should_append_remaining_cards_to_pass_broadcast() {
+        String message = GamePromptUtil.playedCardsBroadcast(
+                "Narylr",
+                "",
+                "剩余手牌：Narylr 15张，meme 12张，Test 9张"
+        );
+
+        assertEquals("Narylr不出\n剩余手牌：Narylr 15张，meme 12张，Test 9张", message);
+    }
+
+    @Test
+    void should_format_remaining_cards_broadcast() {
+        String message = GamePromptUtil.remainingCardsBroadcast(List.of("Narylr 15张", "meme 12张", "Test 9张"));
+
+        assertEquals("剩余手牌：Narylr 15张，meme 12张，Test 9张", message);
     }
 
     @Test

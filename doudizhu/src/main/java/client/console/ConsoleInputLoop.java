@@ -17,10 +17,6 @@ public class ConsoleInputLoop {
         while (scanner.hasNextLine()) {
             String input = scanner.nextLine();
             connection.send(input);
-            if ("exit".equalsIgnoreCase(input)) {
-                connection.closeQuietly();
-                return;
-            }
         }
     }
 }

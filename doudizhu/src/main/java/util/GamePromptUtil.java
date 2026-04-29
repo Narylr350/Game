@@ -2,6 +2,8 @@ package util;
 
 import game.enumtype.GamePhase;
 
+import java.util.List;
+
 public final class GamePromptUtil {
     private GamePromptUtil() {
     }
@@ -28,6 +30,18 @@ public final class GamePromptUtil {
             return playerName + "不出";
         }
         return playerName + "出了：\n" + cardsText;
+    }
+
+    public static String playedCardsBroadcast(String playerName, String cardsText, String remainingCardsText) {
+        String playedCardsText = playedCardsBroadcast(playerName, cardsText);
+        if (remainingCardsText == null || remainingCardsText.isBlank()) {
+            return playedCardsText;
+        }
+        return playedCardsText + "\n" + remainingCardsText;
+    }
+
+    public static String remainingCardsBroadcast(List<String> playerCardSummaries) {
+        return "剩余手牌：" + String.join("，", playerCardSummaries);
     }
 
     public static String replayPrompt() {

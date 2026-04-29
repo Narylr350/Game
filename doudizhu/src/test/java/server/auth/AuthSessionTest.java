@@ -13,6 +13,17 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthSessionTest {
+    private static final String WELCOME_MENU = String.join("\n",
+            "游戏的登录注册页面打开了",
+            "╔════════════════════════════════╗",
+            "    🎮 欢迎来到三人斗地主 🎮   ",
+            "╚════════════════════════════════╝",
+            "登录/注册输入时输入 exit 返回功能菜单",
+            "请选择操作：1登录 2注册 3退出"
+    );
+    private static final String USERNAME_PROMPT = "请输入用户名（输入 exit 返回功能菜单）：";
+    private static final String PASSWORD_PROMPT = "请输入密码（输入 exit 返回功能菜单）：";
+    private static final String CONFIRM_PASSWORD_PROMPT = "请再次输入密码（输入 exit 返回功能菜单）：";
 
     @Test
     void should_complete_login_after_server_guided_questions() {
@@ -21,14 +32,14 @@ class AuthSessionTest {
         AuthSession session = new AuthSession(new AuthenticationService(repository, new CredentialPolicy()));
 
         AuthStepResult firstPrompt = session.start();
-        assertEquals("请选择操作：1登录 2注册", firstPrompt.message());
+        assertEquals(WELCOME_MENU, firstPrompt.message());
         assertFalse(firstPrompt.authenticated());
 
         AuthStepResult usernamePrompt = session.handleInput("1");
-        assertEquals("请输入用户名：", usernamePrompt.message());
+        assertEquals(USERNAME_PROMPT, usernamePrompt.message());
 
         AuthStepResult passwordPrompt = session.handleInput("alice");
-        assertEquals("请输入密码：", passwordPrompt.message());
+        assertEquals(PASSWORD_PROMPT, passwordPrompt.message());
 
         AuthStepResult success = session.handleInput("abc123");
         assertEquals("登录成功,游戏启动~", success.message());
@@ -51,12 +62,66 @@ class AuthSessionTest {
         assertFalse(duplicate.authenticated());
 
         AuthStepResult passwordPrompt = session.handleInput("bob1");
-        assertEquals("请输入密码：", passwordPrompt.message());
+        assertEquals(PASSWORD_PROMPT, passwordPrompt.message());
+
+        AuthStepResult confirmPasswordPrompt = session.handleInput("abc123");
+        assertEquals(CONFIRM_PASSWORD_PROMPT, confirmPasswordPrompt.message());
 
         AuthStepResult success = session.handleInput("abc123");
         assertEquals("用户bob1注册成功！", success.message());
         assertTrue(success.authenticated());
         assertEquals("bob1", success.username());
+    }
+
+    @Test
+    void should_reject_register_when_confirm_password_is_different() {
+        InMemoryUserRepository repository = new InMemoryUserRepository();
+        AuthSession session = new AuthSession(new AuthenticationService(repository, new CredentialPolicy()));
+
+        session.start();
+        session.handleInput("2");
+        session.handleInput("bob1");
+        session.handleInput("abc123");
+
+        AuthStepResult mismatch = session.handleInput("abc456");
+
+        assertEquals("两次密码输入不一致请重新输入", mismatch.message());
+        assertFalse(mismatch.authenticated());
+        assertTrue(repository.findByUsername("bob1").isEmpty());
+        assertEquals(PASSWORD_PROMPT, session.currentPrompt());
+    }
+
+    @Test
+    void should_return_to_menu_when_exit_is_entered_during_login_or_register() {
+        InMemoryUserRepository repository = new InMemoryUserRepository();
+        repository.save(new UserAccount("user00001", "alice", "abc123", true));
+        AuthSession session = new AuthSession(new AuthenticationService(repository, new CredentialPolicy()));
+
+        session.start();
+        session.handleInput("1");
+        session.handleInput("alice");
+        AuthStepResult loginBack = session.handleInput("exit");
+        assertEquals(WELCOME_MENU, loginBack.message());
+        assertFalse(loginBack.authenticated());
+
+        session.handleInput("2");
+        session.handleInput("bob1");
+        AuthStepResult registerBack = session.handleInput("exit");
+        assertEquals(WELCOME_MENU, registerBack.message());
+        assertFalse(registerBack.authenticated());
+        assertEquals(WELCOME_MENU, session.currentPrompt());
+    }
+
+    @Test
+    void should_request_exit_when_choose_exit_from_menu() {
+        AuthSession session = new AuthSession(new AuthenticationService(new InMemoryUserRepository(), new CredentialPolicy()));
+
+        session.start();
+        AuthStepResult result = session.handleInput("3");
+
+        assertEquals("用户选择了退出操作", result.message());
+        assertFalse(result.authenticated());
+        assertTrue(result.exitRequested());
     }
 
     @Test
@@ -84,7 +149,7 @@ class AuthSessionTest {
         session.handleInput("1");
         AuthStepResult result = session.handleInput("alice");
 
-        assertEquals("请输入密码：", result.message());
+        assertEquals(PASSWORD_PROMPT, result.message());
         assertFalse(result.authenticated());
     }
 

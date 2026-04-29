@@ -15,6 +15,16 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SocketAuthenticatorTest {
+    private static final String WELCOME_MENU = String.join("\n",
+            "游戏的登录注册页面打开了",
+            "╔════════════════════════════════╗",
+            "    🎮 欢迎来到三人斗地主 🎮   ",
+            "╚════════════════════════════════╝",
+            "登录/注册输入时输入 exit 返回功能菜单",
+            "请选择操作：1登录 2注册 3退出"
+    );
+    private static final String USERNAME_PROMPT = "请输入用户名（输入 exit 返回功能菜单）：";
+    private static final String PASSWORD_PROMPT = "请输入密码（输入 exit 返回功能菜单）：";
 
     @Test
     void should_drive_login_by_prompting_step_by_step() {
@@ -32,9 +42,9 @@ class SocketAuthenticatorTest {
         assertEquals("alice", username);
         assertEquals(
                 String.join(System.lineSeparator(),
-                        "请选择操作：1登录 2注册",
-                        "请输入用户名：",
-                        "请输入密码：",
+                        WELCOME_MENU,
+                        USERNAME_PROMPT,
+                        PASSWORD_PROMPT,
                         "登录成功,游戏启动~")
                         + System.lineSeparator(),
                 output.toString()
@@ -57,13 +67,13 @@ class SocketAuthenticatorTest {
         assertEquals("alice", username);
         assertEquals(
                 String.join(System.lineSeparator(),
-                        "请选择操作：1登录 2注册",
-                        "请输入用户名：",
-                        "请输入密码：",
+                        WELCOME_MENU,
+                        USERNAME_PROMPT,
+                        PASSWORD_PROMPT,
                         "登录失败，密码输入错误~",
-                        "请选择操作：1登录 2注册",
-                        "请输入用户名：",
-                        "请输入密码：",
+                        WELCOME_MENU,
+                        USERNAME_PROMPT,
+                        PASSWORD_PROMPT,
                         "登录成功,游戏启动~")
                         + System.lineSeparator(),
                 output.toString()
@@ -86,9 +96,30 @@ class SocketAuthenticatorTest {
         assertEquals("alice", username);
         assertEquals(
                 String.join(System.lineSeparator(),
-                        "请选择操作：1登录 2注册",
-                        "请输入用户名：",
+                        WELCOME_MENU,
+                        USERNAME_PROMPT,
                         "登录成功,游戏启动~")
+                        + System.lineSeparator(),
+                output.toString()
+        );
+    }
+
+    @Test
+    void should_return_null_when_user_exits_from_menu() {
+        SocketAuthenticator authenticator =
+                new SocketAuthenticator(new AuthenticationService(new InMemoryUserRepository(), new CredentialPolicy()));
+
+        BufferedReader reader = new BufferedReader(new StringReader("3\n"));
+        StringWriter output = new StringWriter();
+        PrintWriter writer = new PrintWriter(output, true);
+
+        String username = authenticator.authenticate(reader, writer);
+
+        assertEquals(null, username);
+        assertEquals(
+                String.join(System.lineSeparator(),
+                        WELCOME_MENU,
+                        "用户选择了退出操作")
                         + System.lineSeparator(),
                 output.toString()
         );

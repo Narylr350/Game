@@ -40,6 +40,9 @@ public class TurnInputCoordinator {
             if (!replayVoters.contains(playerId)) {
                 return InputAcceptance.reject("当前不在本局结算选择中");
             }
+            if (!isReplayVote(message)) {
+                return InputAcceptance.reject("请输入 1 继续 或 2 退出");
+            }
             if (replayVotes.containsKey(playerId)) {
                 return InputAcceptance.reject("你已经选择过了");
             }
@@ -136,5 +139,9 @@ public class TurnInputCoordinator {
 
     public synchronized int getCurrentPlayerId() {
         return currentPlayerId;
+    }
+
+    private boolean isReplayVote(String message) {
+        return "1".equals(message) || "2".equals(message);
     }
 }

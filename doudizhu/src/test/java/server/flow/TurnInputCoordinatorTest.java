@@ -94,6 +94,23 @@ class TurnInputCoordinatorTest {
     }
 
     @Test
+    void should_reject_blank_or_invalid_replay_vote_without_recording_it() {
+        TurnInputCoordinator coordinator = new TurnInputCoordinator();
+        coordinator.beginReplayVote(Set.of(1, 2, 3));
+
+        InputAcceptance blank = coordinator.submit(1, "");
+        InputAcceptance invalid = coordinator.submit(1, "abc");
+        InputAcceptance valid = coordinator.submit(1, "1");
+
+        assertFalse(blank.accepted());
+        assertEquals("请输入 1 继续 或 2 退出", blank.message());
+        assertFalse(invalid.accepted());
+        assertEquals("请输入 1 继续 或 2 退出", invalid.message());
+        assertTrue(valid.accepted());
+        assertEquals(Map.of(), coordinator.pollReplayVotes());
+    }
+
+    @Test
     void should_wake_when_all_replay_votes_arrive() throws Exception {
         TurnInputCoordinator coordinator = new TurnInputCoordinator();
         coordinator.beginReplayVote(Set.of(1, 2, 3));

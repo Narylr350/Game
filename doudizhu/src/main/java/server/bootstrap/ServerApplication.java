@@ -17,7 +17,6 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.concurrent.CountDownLatch;
 
 public class ServerApplication {
     private final PlayerSessionRegistry registry = new PlayerSessionRegistry();
@@ -32,10 +31,6 @@ public class ServerApplication {
             logServer(playerCount + " 个客户端已全部连接，开始游戏...");
 
             startConsoleThread();
-            for (PlayerSession session : registry.snapshot()) {
-                new Thread(new PlayerMessageListener(session, registry, coordinator, this::logServer)).start();
-            }
-
             new GameServerRunner(registry, coordinator).run();
         } catch (IOException e) {
             logServer("服务器启动或运行异常：" + e.getMessage());
@@ -44,16 +39,15 @@ public class ServerApplication {
     }
 
     private void acceptPlayers(ServerSocket serverSocket, int playerCount) throws IOException {
-        CountDownLatch authenticatedPlayers = new CountDownLatch(playerCount);
         int originalTimeout = serverSocket.getSoTimeout();
         serverSocket.setSoTimeout(200);
         try {
-            while (authenticatedPlayers.getCount() > 0) {
+            while (registry.size() < playerCount) {
                 try {
                     Socket socket = serverSocket.accept();
-                    startAuthenticationThread(socket, playerCount, authenticatedPlayers);
+                    startAuthenticationThread(socket, playerCount);
                 } catch (SocketTimeoutException ignored) {
-                    // 周期性检查是否已经凑够玩家，避免 accept 一直阻塞。
+                    // 周期性检查当前在线玩家数，候场玩家断开时不会占住名额。
                 }
             }
         } finally {
@@ -61,14 +55,14 @@ public class ServerApplication {
         }
     }
 
-    private void startAuthenticationThread(Socket socket, int playerCount, CountDownLatch authenticatedPlayers) {
-        Thread thread = new Thread(() -> authenticateAndRegister(socket, playerCount, authenticatedPlayers));
+    private void startAuthenticationThread(Socket socket, int playerCount) {
+        Thread thread = new Thread(() -> authenticateAndRegister(socket, playerCount));
         thread.setName("auth-" + socket.getPort());
         thread.setDaemon(true);
         thread.start();
     }
 
-    private void authenticateAndRegister(Socket socket, int playerCount, CountDownLatch authenticatedPlayers) {
+    private void authenticateAndRegister(Socket socket, int playerCount) {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
@@ -91,7 +85,7 @@ public class ServerApplication {
                     + "，名字：" + playerName);
 
             session.send("欢迎你，" + playerName + "，你的编号是：" + session.getPlayerId());
-            authenticatedPlayers.countDown();
+            startPlayerMessageListener(session);
         } catch (IOException e) {
             logServer("客户端认证异常：" + e.getMessage());
             try {
@@ -100,6 +94,12 @@ public class ServerApplication {
                 logServer("关闭异常连接失败：" + closeException.getMessage());
             }
         }
+    }
+
+    private void startPlayerMessageListener(PlayerSession session) {
+        Thread thread = new Thread(new PlayerMessageListener(session, registry, coordinator, this::logServer));
+        thread.setName("player-" + session.getPlayerId());
+        thread.start();
     }
 
     private void startConsoleThread() {
