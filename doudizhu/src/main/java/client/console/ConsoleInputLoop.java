@@ -14,9 +14,13 @@ public class ConsoleInputLoop {
     }
 
     public void run() {
-        while (scanner.hasNextLine()) {
-            String input = scanner.nextLine();
-            connection.send(input);
+        try {
+            while (!connection.isClosed() && scanner.hasNextLine()) {
+                String input = scanner.nextLine();
+                connection.send(input);
+            }
+        } catch (IllegalStateException ignored) {
+            // 客户端退出时主线程会关闭 Scanner，输入线程安静结束即可。
         }
     }
 }

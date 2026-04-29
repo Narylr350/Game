@@ -42,4 +42,32 @@ class ConsoleInputLoopTest {
             }
         }
     }
+
+    @Test
+    void should_stop_quietly_when_scanner_is_closed_after_connection_shutdown() throws Exception {
+        try (ServerSocket serverSocket = new ServerSocket(0)) {
+            Socket[] acceptedSocket = new Socket[1];
+            Thread acceptThread = new Thread(() -> {
+                try {
+                    acceptedSocket[0] = serverSocket.accept();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            acceptThread.start();
+
+            ClientConnection connection = ClientConnection.connect("127.0.0.1", serverSocket.getLocalPort());
+            acceptThread.join(1_000);
+
+            try (Socket serverSideSocket = acceptedSocket[0]) {
+                Scanner scanner = new Scanner("1\n");
+                scanner.close();
+
+                new ConsoleInputLoop(scanner, connection).run();
+                assertFalse(connection.isClosed());
+            } finally {
+                connection.closeQuietly();
+            }
+        }
+    }
 }

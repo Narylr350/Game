@@ -32,9 +32,12 @@ public class ServerApplication {
 
             startConsoleThread();
             new GameServerRunner(registry, coordinator).run();
+            logServer("游戏流程结束，服务端退出");
+            System.exit(0);
         } catch (IOException e) {
             logServer("服务器启动或运行异常：" + e.getMessage());
             e.printStackTrace();
+            System.exit(1);
         }
     }
 

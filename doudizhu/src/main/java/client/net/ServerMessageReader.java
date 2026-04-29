@@ -26,6 +26,7 @@ public class ServerMessageReader implements Runnable {
         } finally {
             connection.closeQuietly();
             System.out.println("服务器连接已关闭");
+            System.exit(0);
         }
     }
 }
