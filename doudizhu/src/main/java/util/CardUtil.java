@@ -6,8 +6,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 // 纯工具类：负责牌堆模板和牌面显示，不参与对局流程控制。
@@ -24,6 +22,16 @@ public final class CardUtil {
      * 模板中的牌顺序是固定的,通常用于创建新的、未洗牌的牌堆。
      */
     private static final List<Integer> DECK_TEMPLATE = new ArrayList<>();
+
+    /**
+     * 玩家输入支持的牌面词元。
+     * <p>
+     * 顺序按最长优先排列，避免 10 被错误拆成 1 和 0。
+     * </p>
+     */
+    private static final List<String> INPUT_TOKENS = List.of(
+            "小王", "大王", "10", "J", "Q", "K", "A", "2", "3", "4", "5", "6", "7", "8", "9"
+    );
 
     public static final int TWO_RANK = 13;
     public static final int SMALL_JOKER_RANK = 14;
@@ -118,13 +126,16 @@ public final class CardUtil {
         if (cards == null) {
             throw new IllegalArgumentException("字符串不能为空");
         }
+        if (playerHandCards == null) {
+            throw new IllegalArgumentException("玩家手牌不能为空");
+        }
 
         cards = cards.trim().toUpperCase();
         if (cards.isEmpty() || "PASS".equalsIgnoreCase(cards)) {
             return new ArrayList<>();
         }
 
-        cards = cards.replace(" ", "");
+        cards = cards.replaceAll("\\s+", "");
 
         List<String> inputTokens = tokenize(cards);
         if (inputTokens.isEmpty()) {
@@ -177,9 +188,7 @@ public final class CardUtil {
      * @return 找到的最长词元前缀，如果未找到则返回null
      */
     private static String matchLongestTokenPrefix(String cards, int start) {
-        // 最长优先，避免 10 被拆成 1 和 0
-        List<String> orderedTokens = List.of("小王", "大王", "10", "J", "Q", "K", "A", "2", "3", "4", "5", "6", "7", "8", "9");
-        for (String token : orderedTokens) {
+        for (String token : INPUT_TOKENS) {
             if (cards.startsWith(token, start)) {
                 return token;
             }

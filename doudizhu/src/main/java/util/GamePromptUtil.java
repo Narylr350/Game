@@ -2,7 +2,9 @@ package util;
 
 import game.enumtype.GamePhase;
 
-public class GamePromptMessages {
+public final class GamePromptUtil {
+    private GamePromptUtil() {
+    }
 
     public static String getMessage(GamePhase type) {
         return switch (type) {

@@ -9,11 +9,7 @@ import java.util.List;
 /**
  * 出牌规则检查器。
  * <p>
- * 负责判断玩家的出牌操作是否合法。
- * </p>
- * <p>
- * <b>注意:</b> 第3阶段会把真正的出牌合法性判断补进来,当前只做最小防御性校验。
- * 目前仅检查房间、玩家、牌组是否为空等基础条件,不检查牌型合法性。
+ * 负责判断玩家当前出牌是否符合阶段、牌型和压牌规则。
  * </p>
  */
 public class PlayingRuleChecker {
@@ -37,7 +33,7 @@ public class PlayingRuleChecker {
         if (GamePhase.PLAYING != room.getCurrentPhase()) {
             return PlayCheckResult.WRONG_PHASE;
         }
-        if (cards.isEmpty()){
+        if (cards.isEmpty()) {
             return PlayCheckResult.VALID;
         }
         if (PlayCardGroup.analyzeCards(cards)
@@ -89,7 +85,7 @@ public class PlayingRuleChecker {
         }
         if (lastCardGroup.getType().equals(CardType.BOMB)
                 && currentCardGroup.getType().equals(CardType.BOMB)
-                && (currentCardGroup.getMainRank() <= lastCardGroup.getMainRank())){
+                && (currentCardGroup.getMainRank() <= lastCardGroup.getMainRank())) {
             return PlayCheckResult.NOT_STRONGER_THAN_LAST;
         }
         //判断牌型是否一致

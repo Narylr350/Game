@@ -92,10 +92,7 @@ public class GameFlow {
      * @return 初始化完成的游戏房间
      */
     public GameRoom startRoom(List<String> playerNames) {
-        DealResult dealResult = deal(playerNames);
-        GameRoom room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
-        room.setCurrentPhase(GamePhase.DEALING);
-        return startCallLandLord(room);
+        return startCallLandLord(createDealtRoom(playerNames));
     }
 
     /**
@@ -107,10 +104,7 @@ public class GameFlow {
      * @return 新创建的游戏房间对象
      */
     public GameRoom startNewRoom(GameRoom oldRoom) {
-        DealResult dealResult = deal(collectPlayerNames(oldRoom));
-        GameRoom room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
-        room.setCurrentPhase(GamePhase.DEALING);
-        return startCallLandLord(room);
+        return startCallLandLord(createDealtRoom(collectPlayerNames(oldRoom)));
     }
 
     /**
@@ -140,9 +134,17 @@ public class GameFlow {
      * @return 新房间对象
      */
     public GameRoom reDeal(GameRoom oldRoom) {
-        DealResult dealResult = deal(collectPlayerNames(oldRoom));
-        GameRoom newRoom = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
-        return startCallLandLord(newRoom);
+        return startCallLandLord(createDealtRoom(collectPlayerNames(oldRoom)));
+    }
+
+    /**
+     * 根据玩家名称完成发牌并创建初始房间。
+     */
+    private GameRoom createDealtRoom(List<String> playerNames) {
+        DealResult dealResult = deal(playerNames);
+        GameRoom room = new GameRoom(dealResult.getPlayers(), dealResult.getHoleCards());
+        room.setCurrentPhase(GamePhase.DEALING);
+        return room;
     }
 
     /**

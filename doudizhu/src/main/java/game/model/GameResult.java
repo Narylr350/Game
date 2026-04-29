@@ -74,7 +74,7 @@ public class GameResult {
      */
     public static GameResult rejected(String message, Integer sendToPlayerId) {
         return new GameResult(
-                    false,
+                false,
                 message,
                 GameEventType.ACTION_REJECTED,
                 sendToPlayerId);
@@ -182,6 +182,41 @@ public class GameResult {
      */
     public GameEventType getEventType() {
         return eventType;
+    }
+
+    /**
+     * 判断是否为普通动作接受结果。
+     */
+    public boolean isAccepted() {
+        return eventType == GameEventType.ACTION_ACCEPTED;
+    }
+
+    /**
+     * 判断是否为动作拒绝结果。
+     */
+    public boolean isRejected() {
+        return eventType == GameEventType.ACTION_REJECTED;
+    }
+
+    /**
+     * 判断是否为地主已确认结果。
+     */
+    public boolean isLandlordDecided() {
+        return eventType == GameEventType.LANDLORD_DECIDED;
+    }
+
+    /**
+     * 判断是否为需要重新发牌结果。
+     */
+    public boolean isRedealRequired() {
+        return eventType == GameEventType.REDEAL_REQUIRED;
+    }
+
+    /**
+     * 判断是否为游戏结算结果。
+     */
+    public boolean isGameSettled() {
+        return eventType == GameEventType.GAME_SETTLED;
     }
 
     /**

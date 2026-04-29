@@ -2,7 +2,6 @@ package server.game;
 
 import game.action.ActionType;
 import game.action.GameAction;
-import game.enumtype.GameEventType;
 import game.enumtype.GamePhase;
 import game.flow.GameFlow;
 import game.model.GameResult;
@@ -19,7 +18,7 @@ import server.log.WinnerSide;
 import server.session.PlayerSession;
 import server.session.PlayerSessionRegistry;
 import util.CardUtil;
-import util.GamePromptMessages;
+import util.GamePromptUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -106,7 +105,7 @@ public class GameServerRunner {
 
                 GameResult gameResult = gameFlow.handlePlayerAction(currentRoom, action);
                 handlePlayingResult(playerId, result.message(), action, gameResult);
-                if (gameResult != null && gameResult.getEventType() == GameEventType.GAME_SETTLED) {
+                if (gameResult != null && gameResult.isGameSettled()) {
                     continue;
                 }
             } else {
@@ -123,8 +122,8 @@ public class GameServerRunner {
         coordinator.beginTurn(playerId, phase);
         PlayerSession session = registry.findByPlayerId(playerId);
         String playerName = session == null ? "" : session.getPlayerName();
-        registry.broadcast(GamePromptMessages.turnBroadcast(playerName));
-        registry.sendToPlayer(playerId, GamePromptMessages.getMessage(phase));
+        registry.broadcast(GamePromptUtil.turnBroadcast(playerName));
+        registry.sendToPlayer(playerId, GamePromptUtil.getMessage(phase));
         return coordinator.awaitReadyInput();
     }
 
@@ -160,8 +159,7 @@ public class GameServerRunner {
 
         PlayerState playerState = currentRoom.getPlayerById(playerId);
         if (playerState != null) {
-            if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED
-                    || gameResult.getEventType() == GameEventType.GAME_SETTLED) {
+            if (gameResult.isAccepted() || gameResult.isGameSettled()) {
                 Collection<Integer> playedCards = action.getCards();
                 String playerName = getPlayerName(playerId);
                 String actionResult = action.getType() == ActionType.PASS_CARD ? "不出" : "出牌";
@@ -173,9 +171,9 @@ public class GameServerRunner {
 
                 registry.broadcastExcept(
                         playerId,
-                        GamePromptMessages.playedCardsBroadcast(playerName, CardUtil.cardsToString(playedCards))
+                        GamePromptUtil.playedCardsBroadcast(playerName, CardUtil.cardsToString(playedCards))
                 );
-            } else if (gameResult.getEventType() == GameEventType.ACTION_REJECTED) {
+            } else if (gameResult.isRejected()) {
                 registry.sendToPlayer(playerId, gameResult.getMessage());
             }
 
@@ -204,7 +202,7 @@ public class GameServerRunner {
         }
 
         coordinator.beginReplayVote(playerIds);
-        registry.broadcast(GamePromptMessages.replayPrompt());
+        registry.broadcast(GamePromptUtil.replayPrompt());
         Map<Integer, PlayerInput> replayVotes = coordinator.awaitReplayVotes();
         if (replayVotes.size() != playerIds.size()) {
             registry.broadcast("有玩家退出，房间结束");
@@ -256,9 +254,9 @@ public class GameServerRunner {
             }
 
             broadcastResult(playerId, gameResult);
-            if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED
-                    || gameResult.getEventType() == GameEventType.LANDLORD_DECIDED
-                    || gameResult.getEventType() == GameEventType.REDEAL_REQUIRED) {
+            if (gameResult.isAccepted()
+                    || gameResult.isLandlordDecided()
+                    || gameResult.isRedealRequired()) {
                 String playerName = getPlayerName(playerId);
                 String resultMessage = landlordActionResult(phase, action.getType());
                 safelyLog(
@@ -270,7 +268,7 @@ public class GameServerRunner {
             logRoomState("叫抢地主处理后");
         }
 
-        if (gameResult != null && gameResult.getEventType() == GameEventType.LANDLORD_DECIDED) {
+        if (gameResult != null && gameResult.isLandlordDecided()) {
             safelyLog(() -> gameLogService.updateLandlordPlayerId(currentSessionId, currentRoom.getLandlordPlayerId()), "更新地主");
             registry.broadcast("地主已确定：玩家 " + currentRoom.getLandlordPlayerId());
             registry.broadcast("地主底牌：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
@@ -278,7 +276,7 @@ public class GameServerRunner {
             logLandlordState("地主确认后");
         }
 
-        if (gameResult != null && gameResult.getEventType() == GameEventType.REDEAL_REQUIRED) {
+        if (gameResult != null && gameResult.isRedealRequired()) {
             currentRoom = gameFlow.reDeal(currentRoom);
             landlordState = currentRoom.getLandlordState();
             registry.broadcast(gameResult.getMessage());
@@ -291,14 +289,14 @@ public class GameServerRunner {
     }
 
     private void broadcastResult(Integer playerId, GameResult gameResult) {
-        if (gameResult.getEventType() == GameEventType.ACTION_ACCEPTED) {
+        if (gameResult.isAccepted()) {
             registry.broadcast(gameResult.getMessage());
 
             PlayerSession session = registry.findByPlayerId(playerId);
             if (session != null) {
                 registry.broadcastExcept(playerId, session.getPlayerName() + " " + gameResult.getMessage());
             }
-        } else if (gameResult.getEventType() == GameEventType.ACTION_REJECTED) {
+        } else if (gameResult.isRejected()) {
             registry.sendToPlayer(playerId, gameResult.getMessage());
         }
     }
@@ -392,7 +390,7 @@ public class GameServerRunner {
     }
 
     private void logTurnStart(Integer playerId, GamePhase phase) {
-        System.out.println(GamePromptMessages.turnConsoleTitle(getPlayerName(playerId)));
+        System.out.println(GamePromptUtil.turnConsoleTitle(getPlayerName(playerId)));
         System.out.println("当前阶段 = " + phase);
         if (currentRoom != null) {
             System.out.println("地主玩家ID = " + currentRoom.getLandlordPlayerId());

@@ -37,15 +37,32 @@ public class PlayingHandler {
         PlayerState currentPlayer = room.getPlayerById(currentPlayerId);
         PlayCheckResult playCheckResult = PlayingRuleChecker.checkPlay(room, cards);
 
+        GameResult rejectedResult = rejectInvalidAction(playerId, currentPlayerId, playCheckResult);
+        if (rejectedResult != null) {
+            return rejectedResult;
+        }
+
+        if (ActionType.PLAY_CARD == actionType) {
+            return playCards(room, playingState, currentPlayer, playerId, currentPlayerId, cards);
+        }
+
+        if (ActionType.PASS_CARD == actionType) {
+            return passCards(room, playingState, playerId, currentPlayerId);
+        }
+
+        return GameResult.rejected("当前操作无效", playerId);
+    }
+
+    private GameResult rejectInvalidAction(int playerId, int currentPlayerId, PlayCheckResult playCheckResult) {
         if (currentPlayerId != playerId) {
-            return GameResult.rejected("是你吗你就出", playerId);
+            return GameResult.rejected("现在还没轮到你操作", playerId);
         }
         // 出牌阶段的业务非法状态统一返回 rejected，而不是依赖异常让服务端兜底。
         if (playCheckResult == PlayCheckResult.WRONG_PHASE) {
             return GameResult.rejected("当前阶段不能出牌", playerId);
         }
         if (playCheckResult == PlayCheckResult.INVALID_CARD_PATTERN) {
-            return GameResult.rejected("瞎几把出什么呢", playerId);
+            return GameResult.rejected("出牌牌型无效", playerId);
         }
         if (playCheckResult == PlayCheckResult.CARD_TYPE_MISMATCH) {
             return GameResult.rejected("牌型和上家不匹配", playerId);
@@ -53,40 +70,48 @@ public class PlayingHandler {
         if (playCheckResult == PlayCheckResult.NOT_STRONGER_THAN_LAST) {
             return GameResult.rejected("没有大过上家", playerId);
         }
+        return null;
+    }
 
-        if (playCheckResult == PlayCheckResult.VALID) {
-            // 出牌
-            if (ActionType.PLAY_CARD == actionType) {
-                playingState.setRecentPlayedCards(cards);
-                playingState.setLastPlayedCards(cards);
-                boolean removed = currentPlayer.removeCards(cards);
-                if (!removed) {
-                    return GameResult.rejected(playerId + "使用了无中生有", playerId);
-                }
-                playingState.setHighestCardPlayerId(playerId);
-                if (currentPlayer.getCards().isEmpty()) {
-                    return settleGame(room, playerId);
-                }
-                room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
-                playingState.resetPassCount();
-                return GameResult.accepted("出牌");
-            }
-            // 不出
-            if (ActionType.PASS_CARD == actionType) {
-                if (playingState.getHighestCardPlayerId() == currentPlayerId){
-                    return GameResult.rejected("该你出了",playerId);
-                }
-                playingState.incrementPassCount();
-                if (playingState.getPassCount() == 2){
-                    room.setCurrentPlayerId(playingState.getHighestCardPlayerId());
-                    playingState.resetRound();
-                    return GameResult.accepted("不出");
-                }
-                room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
-                return GameResult.accepted("不出");
-            }
+    /**
+     * 处理真正出牌：记录本轮牌面、从玩家手牌移除、推进到下一位玩家或结算。
+     */
+    private GameResult playCards(GameRoom room,
+                                 PlayingState playingState,
+                                 PlayerState currentPlayer,
+                                 int playerId,
+                                 int currentPlayerId,
+                                 List<Integer> cards) {
+        playingState.setRecentPlayedCards(cards);
+        playingState.setLastPlayedCards(cards);
+        boolean removed = currentPlayer.removeCards(cards);
+        if (!removed) {
+            return GameResult.rejected("手牌中没有这些牌", playerId);
         }
-        return GameResult.rejected("当前操作无效", playerId);
+        playingState.setHighestCardPlayerId(playerId);
+        if (currentPlayer.getCards().isEmpty()) {
+            return settleGame(room, playerId);
+        }
+        room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
+        playingState.resetPassCount();
+        return GameResult.accepted("出牌");
+    }
+
+    /**
+     * 处理不出：连续两名玩家不出时，回到当前最大牌玩家重新出牌。
+     */
+    private GameResult passCards(GameRoom room, PlayingState playingState, int playerId, int currentPlayerId) {
+        if (playingState.getHighestCardPlayerId() == currentPlayerId) {
+            return GameResult.rejected("该你出了", playerId);
+        }
+        playingState.incrementPassCount();
+        if (playingState.getPassCount() == 2) {
+            room.setCurrentPlayerId(playingState.getHighestCardPlayerId());
+            playingState.resetRound();
+            return GameResult.accepted("不出");
+        }
+        room.setCurrentPlayerId(room.getNextPlayerId(currentPlayerId));
+        return GameResult.accepted("不出");
     }
 
     private GameResult settleGame(GameRoom room, int winnerId) {

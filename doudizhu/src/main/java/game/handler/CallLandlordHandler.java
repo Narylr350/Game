@@ -49,11 +49,11 @@ public class CallLandlordHandler {
         }
 
         if (actionType == null) {
-            return GameResult.rejected("你在干赣神魔", playerId);
+            return GameResult.rejected("当前操作无效", playerId);
         }
 
         if (currentPlayerId != playerId) {
-            return GameResult.rejected("是你吗你就抢", playerId);
+            return GameResult.rejected("现在还没轮到你操作", playerId);
         }
 
         // 叫地主
@@ -79,7 +79,7 @@ public class CallLandlordHandler {
             landlordState.incrementCallPassCount();
 
             // 三人都不叫，重开
-            if (landlordState.getCallPassCount() == 3) {
+            if (LandlordRuleChecker.shouldRedealAfterCallPass(landlordState)) {
                 landlordState.resetLandlordPhaseState();
                 room.setCurrentPhase(GamePhase.DEALING);
                 return GameResult.redealRequired("三人都不叫地主，重新发牌");

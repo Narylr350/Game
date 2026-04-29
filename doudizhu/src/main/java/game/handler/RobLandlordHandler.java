@@ -9,8 +9,6 @@ import rule.landlord.LandlordCheckResult;
 import rule.landlord.LandlordRuleChecker;
 import game.state.LandlordState;
 
-import java.util.List;
-
 /**
  * 抢地主阶段处理器。
  * <p>
@@ -49,16 +47,15 @@ public class RobLandlordHandler {
         }
 
         if (actionType == null) {
-            return GameResult.rejected("你在干赣神魔", playerId);
+            return GameResult.rejected("当前操作无效", playerId);
         }
 
         if (currentPlayerId != playerId) {
-            return GameResult.rejected("是你吗你就叫", playerId);
+            return GameResult.rejected("现在还没轮到你操作", playerId);
         }
 
         // 叫地主阶段已经不叫的玩家，在抢地主阶段强制PASS
-        List<Integer> callPassPlayerIds = landlordState.getCallPassPlayerIds();
-        if (callPassPlayerIds.contains(currentPlayerId)) {
+        if (LandlordRuleChecker.shouldForceRobPass(landlordState, currentPlayerId)) {
             actionType = ActionType.PASS;
         }
 
@@ -90,17 +87,16 @@ public class RobLandlordHandler {
      * @return 根据当前游戏状态返回的处理结果，包括地主确认或动作被接受的信息
      */
     private GameResult resolveRobResult(GameRoom room, LandlordState landlordState, int currentPlayerId, String acceptedMessage) {
-        Integer firstCallerId = landlordState.getFirstCallerId();
         Integer landlordCandidateId = landlordState.getLandlordCandidateId();
         Integer nextPlayerId = room.getCurrentPlayerId();
 
-        if (Integer.valueOf(currentPlayerId)
-                .equals(firstCallerId)) {
+        if (LandlordRuleChecker.hasReturnedToFirstCaller(landlordState, currentPlayerId)) {
             gameFlow.confirmLandlord(room, landlordCandidateId);
             return GameResult.landlordDecided("地主确认：玩家 " + landlordCandidateId);
         }
 
-        if (nextPlayerId.equals(firstCallerId) && firstCallerId.equals(landlordCandidateId)) {
+        if (LandlordRuleChecker.nextIsFirstCaller(landlordState, nextPlayerId)
+                && LandlordRuleChecker.firstCallerIsCurrentCandidate(landlordState)) {
             gameFlow.confirmLandlord(room, landlordCandidateId);
             return GameResult.landlordDecided("地主确认：玩家 " + landlordCandidateId);
         }

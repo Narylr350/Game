@@ -3,6 +3,7 @@ package util;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,6 +18,16 @@ public class CardUtilTest {
         Collection<Integer> handCards = List.of(1, 2, 3, 4, 5);
 
         Collection<Integer> result = CardUtil.stringToCards("pass", handCards);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenInputIsUppercasePassWithSpaces() {
+        Collection<Integer> handCards = List.of(1, 2, 3, 4, 5);
+
+        Collection<Integer> result = CardUtil.stringToCards("  PASS  ", handCards);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -90,6 +101,30 @@ public class CardUtilTest {
     }
 
     @Test
+    void shouldParseJQKAWithoutSpaces() {
+        Collection<Integer> handCards = List.of(32, 36, 40, 44, 1, 2);
+
+        Collection<Integer> result = CardUtil.stringToCards("JQKA", handCards);
+
+        assertNotNull(result);
+        assertEquals(4, result.size());
+        assertTrue(result.contains(32));
+        assertTrue(result.contains(36));
+        assertTrue(result.contains(40));
+        assertTrue(result.contains(44));
+    }
+
+    @Test
+    void shouldParseMixedWhitespaceBetweenCards() {
+        Collection<Integer> handCards = List.of(0, 4, 8, 12);
+
+        Collection<Integer> result = CardUtil.stringToCards("3\t4  5\n6", handCards);
+
+        assertNotNull(result);
+        assertEquals(List.of(0, 4, 8, 12), result.stream().toList());
+    }
+
+    @Test
     void shouldParseSmallAndBigJoker() {
         // 53 = 小王, 54 = 大王
         Collection<Integer> handCards = List.of(52, 53, 0, 1);
@@ -100,6 +135,36 @@ public class CardUtilTest {
         assertEquals(2, result.size());
         assertTrue(result.contains(52));
         assertTrue(result.contains(53));
+    }
+
+    @Test
+    void shouldFormatCardsToReadableString() {
+        assertEquals("3⬛️ 3♣️ 小王 大王", CardUtil.cardsToString(List.of(0, 1, 52, 53)));
+    }
+
+    @Test
+    void shouldThrowWhenCardsToStringReceivesUnknownCardId() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> CardUtil.cardsToString(List.of(54))
+        );
+
+        assertEquals("未知的牌号: 54", ex.getMessage());
+    }
+
+    @Test
+    void shouldThrowWhenCardsToStringReceivesNullCardId() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    List<Integer> cards = new ArrayList<>();
+                    cards.add(1);
+                    cards.add(null);
+                    CardUtil.cardsToString(cards);
+                }
+        );
+
+        assertEquals("cardIds 中不能包含空牌号", ex.getMessage());
     }
 
     @Test
@@ -125,6 +190,26 @@ public class CardUtilTest {
         );
 
         assertEquals("不是合法的扑克牌输入", ex.getMessage());
+    }
+
+    @Test
+    void shouldThrowWhenInputIsNull() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> CardUtil.stringToCards(null, List.of(1, 2, 3))
+        );
+
+        assertEquals("字符串不能为空", ex.getMessage());
+    }
+
+    @Test
+    void shouldThrowWhenPlayerHandCardsIsNull() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> CardUtil.stringToCards("3", null)
+        );
+
+        assertEquals("玩家手牌不能为空", ex.getMessage());
     }
 
     @Test

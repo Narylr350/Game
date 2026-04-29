@@ -1,6 +1,7 @@
 package rule.landlord;
 
 import game.enumtype.GamePhase;
+import game.state.LandlordState;
 import game.model.GameRoom;
 import game.state.PlayerState;
 
@@ -36,5 +37,44 @@ public class LandlordRuleChecker {
             }
         }
         return LandlordCheckResult.VALID;
+    }
+
+    /**
+     * 判断叫地主阶段是否三人都不叫，需要重新发牌。
+     */
+    public static boolean shouldRedealAfterCallPass(LandlordState landlordState) {
+        return landlordState.getCallPassCount() == 3;
+    }
+
+    /**
+     * 判断当前玩家在抢地主阶段是否需要被强制当作不抢。
+     * <p>
+     * 叫地主阶段已经不叫的玩家，在本轮抢地主阶段不能再抢地主。
+     * </p>
+     */
+    public static boolean shouldForceRobPass(LandlordState landlordState, int playerId) {
+        return landlordState.getCallPassPlayerIds().contains(playerId);
+    }
+
+    /**
+     * 判断抢地主流程是否已经回到第一个叫地主的人。
+     */
+    public static boolean hasReturnedToFirstCaller(LandlordState landlordState, int currentPlayerId) {
+        return Integer.valueOf(currentPlayerId).equals(landlordState.getFirstCallerId());
+    }
+
+    /**
+     * 判断下一位玩家是否就是第一个叫地主的人。
+     */
+    public static boolean nextIsFirstCaller(LandlordState landlordState, Integer nextPlayerId) {
+        return nextPlayerId != null && nextPlayerId.equals(landlordState.getFirstCallerId());
+    }
+
+    /**
+     * 判断第一个叫地主的人是否仍然是当前地主候选人。
+     */
+    public static boolean firstCallerIsCurrentCandidate(LandlordState landlordState) {
+        Integer firstCallerId = landlordState.getFirstCallerId();
+        return firstCallerId != null && firstCallerId.equals(landlordState.getLandlordCandidateId());
     }
 }
