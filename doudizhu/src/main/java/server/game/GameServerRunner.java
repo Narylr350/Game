@@ -10,11 +10,7 @@ import game.state.LandlordState;
 import game.state.PlayerState;
 import server.flow.PlayerInput;
 import server.flow.TurnInputCoordinator;
-import server.log.GameEndReason;
-import server.log.GameLogService;
-import server.log.JdbcGameLogRepository;
-import server.log.NoOpGameLogRepository;
-import server.log.WinnerSide;
+import server.log.GameLogDao;
 import server.session.PlayerSession;
 import server.session.PlayerSessionRegistry;
 import util.CardUtil;
@@ -30,7 +26,7 @@ public class GameServerRunner {
     private final PlayerSessionRegistry registry;
     private final TurnInputCoordinator coordinator;
     private final GameFlow gameFlow;
-    private final GameLogService gameLogService;
+    private final GameLogDao gameLogDao;
 
     private GameRoom currentRoom;
     private LandlordState landlordState;
@@ -38,16 +34,16 @@ public class GameServerRunner {
     private Integer settledWinnerPlayerId;
 
     public GameServerRunner(PlayerSessionRegistry registry, TurnInputCoordinator coordinator) {
-        this(registry, coordinator, createGameLogService());
+        this(registry, coordinator, new GameLogDao());
     }
 
     GameServerRunner(PlayerSessionRegistry registry,
                      TurnInputCoordinator coordinator,
-                     GameLogService gameLogService) {
+                     GameLogDao gameLogDao) {
         this.registry = registry;
         this.coordinator = coordinator;
         this.gameFlow = new GameFlow();
-        this.gameLogService = gameLogService;
+        this.gameLogDao = gameLogDao;
     }
 
     public void run() {
@@ -84,7 +80,7 @@ public class GameServerRunner {
             PlayerInput result = waitPlayerAction(playerId, gamePhase);
             if (result == null) {
                 logServer("等待玩家输入失败，流程结束");
-                safelyLog(() -> finishCurrentSession(GameEndReason.PLAYER_DISCONNECTED, settledWinnerPlayerId), "玩家掉线收尾");
+                safelyLog(() -> finishCurrentSession(GameLogDao.PLAYER_DISCONNECTED, settledWinnerPlayerId), "玩家掉线收尾");
                 shutdownRoom();
                 return;
             }
@@ -181,7 +177,7 @@ public class GameServerRunner {
 
             if (playerState.getCards().isEmpty()) {
                 settledWinnerPlayerId = gameResult.getWinnerPlayerId();
-                safelyLog(() -> finishCurrentSession(GameEndReason.NORMAL_SETTLEMENT, settledWinnerPlayerId), "结算收尾");
+                safelyLog(() -> finishCurrentSession(GameLogDao.NORMAL_SETTLEMENT, settledWinnerPlayerId), "结算收尾");
                 for (Map.Entry<Integer, String> entry : gameResult.getPlayerMessages().entrySet()) {
                     registry.sendToPlayer(entry.getKey(), entry.getValue());
                 }
@@ -197,7 +193,7 @@ public class GameServerRunner {
     private boolean handleReplayPhase() {
         Set<Integer> playerIds = Set.copyOf(registry.collectPlayerIds());
         if (playerIds.size() < 3) {
-            safelyLog(() -> finishCurrentSession(GameEndReason.PLAYER_EXIT_AFTER_SETTLEMENT, settledWinnerPlayerId), "结算后退出收尾");
+            safelyLog(() -> finishCurrentSession(GameLogDao.PLAYER_EXIT_AFTER_SETTLEMENT, settledWinnerPlayerId), "结算后退出收尾");
             registry.broadcast("有玩家退出，房间结束");
             shutdownRoom();
             return false;
@@ -226,7 +222,7 @@ public class GameServerRunner {
         boolean allContinue = replayVotes.values().stream()
                 .allMatch(vote -> "1".equals(vote.message()));
         if (!allContinue) {
-            safelyLog(() -> finishCurrentSession(GameEndReason.PLAYER_EXIT_AFTER_SETTLEMENT, settledWinnerPlayerId), "结算后退出收尾");
+            safelyLog(() -> finishCurrentSession(GameLogDao.PLAYER_EXIT_AFTER_SETTLEMENT, settledWinnerPlayerId), "结算后退出收尾");
             registry.broadcast("有玩家退出，房间结束");
             shutdownRoom();
             return false;
@@ -271,7 +267,7 @@ public class GameServerRunner {
         }
 
         if (gameResult != null && gameResult.isLandlordDecided()) {
-            safelyLog(() -> gameLogService.updateLandlordPlayerId(currentSessionId, currentRoom.getLandlordPlayerId()), "更新地主");
+            safelyLog(() -> gameLogDao.updateLandlordPlayerId(currentSessionId, currentRoom.getLandlordPlayerId()), "更新地主");
             registry.broadcast("地主已确定：玩家 " + currentRoom.getLandlordPlayerId());
             registry.broadcast("地主底牌：" + CardUtil.cardsToString(currentRoom.getHoleCards()));
             sendOpeningHands(currentRoom);
@@ -320,7 +316,7 @@ public class GameServerRunner {
 
     private void startSessionLogging() {
         currentSessionId = null;
-        safelyLog(() -> currentSessionId = gameLogService.startSession(registry.collectPlayerNames()), "创建对局日志");
+        safelyLog(() -> currentSessionId = gameLogDao.startSession(registry.collectPlayerNames()), "创建对局日志");
     }
 
     private void shutdownRoom() {
@@ -335,7 +331,7 @@ public class GameServerRunner {
         if (currentSessionId == null) {
             return;
         }
-        gameLogService.appendAction(
+        gameLogDao.appendAction(
                 currentSessionId,
                 phase,
                 playerId,
@@ -364,16 +360,16 @@ public class GameServerRunner {
         return summaries;
     }
 
-    private void finishCurrentSession(GameEndReason endReason, Integer winnerPlayerId) {
+    private void finishCurrentSession(String endReason, Integer winnerPlayerId) {
         if (currentSessionId == null) {
             return;
         }
         Integer landlordPlayerId = currentRoom == null ? null : currentRoom.getLandlordPlayerId();
-        WinnerSide winnerSide = null;
+        String winnerSide = null;
         if (winnerPlayerId != null && landlordPlayerId != null) {
-            winnerSide = winnerPlayerId.equals(landlordPlayerId) ? WinnerSide.LANDLORD : WinnerSide.FARMER;
+            winnerSide = winnerPlayerId.equals(landlordPlayerId) ? GameLogDao.LANDLORD : GameLogDao.FARMER;
         }
-        gameLogService.finishSession(currentSessionId, landlordPlayerId, winnerSide, winnerPlayerId, endReason);
+        gameLogDao.finishSession(currentSessionId, landlordPlayerId, winnerSide, winnerPlayerId, endReason);
     }
 
     private String landlordActionResult(GamePhase phase, ActionType actionType) {
@@ -458,14 +454,5 @@ public class GameServerRunner {
     private void logPlayerCards(PlayerState playerState, String title) {
         System.out.println("[Cards] " + title + "：玩家" + playerState.getPlayerId()
                 + " = " + CardUtil.cardsToString(playerState.getCards()));
-    }
-
-    private static GameLogService createGameLogService() {
-        try {
-            return new GameLogService(new JdbcGameLogRepository());
-        } catch (Exception e) {
-            System.out.println("[Server] 对局日志初始化失败：" + e.getMessage());
-            return new GameLogService(new NoOpGameLogRepository());
-        }
     }
 }

@@ -83,7 +83,7 @@ public class AuthSession {
     }
 
     private AuthStepResult handleLoginUsername(String input) {
-        LoginDecision decision = authenticationService.prepareLogin(input);
+        AuthenticationResult decision = authenticationService.prepareLogin(input);
         if (decision.success()) {
             authenticated = true;
             currentStep = Step.AUTHENTICATED;

@@ -1,7 +1,5 @@
 package client;
 
-import client.bootstrap.ClientApplication;
-
 /**
  * 斗地主游戏客户端类。
  * <p>

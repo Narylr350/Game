@@ -22,7 +22,7 @@ public class JdbcUserRepository implements UserRepository {
         ResultSet resultSet = null;
         try {
             if (connection == null) {
-                throw new RepositoryAccessException("database unavailable");
+                throw new RuntimeException("database unavailable");
             }
             ensureLoginTimeColumn(connection);
             String sql = "select id,username,password,status,last_login_time from user where username = ?";
@@ -41,7 +41,7 @@ public class JdbcUserRepository implements UserRepository {
                     loginTimestamp == null ? null : loginTimestamp.toLocalDateTime()
             ));
         } catch (SQLException e) {
-            throw new RepositoryAccessException("query user failed", e);
+            throw new RuntimeException("query user failed", e);
         } finally {
             AuthJdbcUtil.close(resultSet, statement, connection);
         }
@@ -53,7 +53,7 @@ public class JdbcUserRepository implements UserRepository {
         PreparedStatement statement = null;
         try {
             if (connection == null) {
-                throw new RepositoryAccessException("database unavailable");
+                throw new RuntimeException("database unavailable");
             }
             ensureLoginTimeColumn(connection);
             String sql = "insert into user(id,username,password,status,last_login_time) values(?,?,?,?,?)";
@@ -69,7 +69,7 @@ public class JdbcUserRepository implements UserRepository {
             }
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RepositoryAccessException("save user failed", e);
+            throw new RuntimeException("save user failed", e);
         } finally {
             AuthJdbcUtil.close(null, statement, connection);
         }
@@ -81,7 +81,7 @@ public class JdbcUserRepository implements UserRepository {
         PreparedStatement statement = null;
         try {
             if (connection == null) {
-                throw new RepositoryAccessException("database unavailable");
+                throw new RuntimeException("database unavailable");
             }
             ensureLoginTimeColumn(connection);
             statement = connection.prepareStatement("update user set last_login_time = ? where id = ?");
@@ -89,7 +89,7 @@ public class JdbcUserRepository implements UserRepository {
             statement.setString(2, userId);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RepositoryAccessException("update login time failed", e);
+            throw new RuntimeException("update login time failed", e);
         } finally {
             AuthJdbcUtil.close(null, statement, connection);
         }
@@ -105,7 +105,7 @@ public class JdbcUserRepository implements UserRepository {
             statement = connection.createStatement();
             statement.executeUpdate("alter table user add column last_login_time datetime null");
         } catch (SQLException e) {
-            throw new RepositoryAccessException("ensure login time column failed", e);
+            throw new RuntimeException("ensure login time column failed", e);
         } finally {
             AuthJdbcUtil.close(null, statement, null);
         }
@@ -118,7 +118,7 @@ public class JdbcUserRepository implements UserRepository {
             resultSet = metaData.getColumns(connection.getCatalog(), null, "user", LOGIN_TIME_COLUMN);
             return resultSet.next();
         } catch (SQLException e) {
-            throw new RepositoryAccessException("check login time column failed", e);
+            throw new RuntimeException("check login time column failed", e);
         } finally {
             AuthJdbcUtil.close(resultSet, null, null);
         }

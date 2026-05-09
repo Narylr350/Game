@@ -35,31 +35,31 @@ public class AuthenticationService {
 
             userRepository.updateLoginTime(account.getId(), LocalDateTime.now());
             return new AuthenticationResult(true, "登录成功,游戏启动~", account.getUsername());
-        } catch (RepositoryAccessException e) {
+        } catch (RuntimeException e) {
             return new AuthenticationResult(false, "登录失败，请稍后再试", null);
         }
     }
 
-    public LoginDecision prepareLogin(String username) {
+    public AuthenticationResult prepareLogin(String username) {
         try {
             Optional<UserAccount> userAccount = userRepository.findByUsername(username);
             if (userAccount.isEmpty()) {
-                return new LoginDecision(false, false, "用户名" + username + "未注册，请先注册再登录", null);
+                return new AuthenticationResult(false, "用户名" + username + "未注册，请先注册再登录", null);
             }
 
             UserAccount account = userAccount.get();
             if (!account.isStatus()) {
-                return new LoginDecision(false, false, "用户" + username + "已禁用，请联系客服乌鲁鲁：18000000000", null);
+                return new AuthenticationResult(false, "用户" + username + "已禁用，请联系客服乌鲁鲁：18000000000", null);
             }
 
             if (canSkipPassword(account)) {
                 userRepository.updateLoginTime(account.getId(), LocalDateTime.now());
-                return new LoginDecision(true, false, "登录成功,游戏启动~", account.getUsername());
+                return new AuthenticationResult(true, "登录成功,游戏启动~", account.getUsername());
             }
 
-            return new LoginDecision(false, true, "请输入密码（输入 exit 返回功能菜单）：", account.getUsername());
-        } catch (RepositoryAccessException e) {
-            return new LoginDecision(false, false, "登录失败，请稍后再试", null);
+            return new AuthenticationResult(false, "请输入密码（输入 exit 返回功能菜单）：", account.getUsername(), true);
+        } catch (RuntimeException e) {
+            return new AuthenticationResult(false, "登录失败，请稍后再试", null);
         }
     }
 
@@ -77,7 +77,7 @@ public class AuthenticationService {
 
             userRepository.save(new UserAccount(createId(), username, password, true, LocalDateTime.now()));
             return new AuthenticationResult(true, "用户" + username + "注册成功！", username);
-        } catch (RepositoryAccessException e) {
+        } catch (RuntimeException e) {
             return new AuthenticationResult(false, "注册失败，请稍后再试", null);
         }
     }
@@ -92,7 +92,7 @@ public class AuthenticationService {
                 return "用户名已经存在请重新输入";
             }
             return null;
-        } catch (RepositoryAccessException e) {
+        } catch (RuntimeException e) {
             return "注册失败，请稍后再试";
         }
     }

@@ -1,4 +1,4 @@
-package client.net;
+package client;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -47,10 +47,9 @@ public class ClientConnection {
     }
 
     public void send(String message) {
-        if (closed) {
-            return;
+        if (!closed) {
+            writer.println(message);
         }
-        writer.println(message);
     }
 
     public synchronized void close() throws IOException {

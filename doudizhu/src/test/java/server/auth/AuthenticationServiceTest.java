@@ -72,7 +72,7 @@ class AuthenticationServiceTest {
         );
         AuthenticationService service = new AuthenticationService(repository, new CredentialPolicy());
 
-        LoginDecision decision = service.prepareLogin("alice");
+        AuthenticationResult decision = service.prepareLogin("alice");
 
         assertTrue(decision.success());
         assertFalse(decision.requirePassword());
@@ -93,7 +93,7 @@ class AuthenticationServiceTest {
         );
         AuthenticationService service = new AuthenticationService(repository, new CredentialPolicy());
 
-        LoginDecision decision = service.prepareLogin("alice");
+        AuthenticationResult decision = service.prepareLogin("alice");
 
         assertFalse(decision.success());
         assertTrue(decision.requirePassword());
@@ -103,17 +103,17 @@ class AuthenticationServiceTest {
     private static final class FailingUserRepository implements UserRepository {
         @Override
         public Optional<UserAccount> findByUsername(String username) {
-            throw new RepositoryAccessException("db unavailable");
+            throw new RuntimeException("db unavailable");
         }
 
         @Override
         public void save(UserAccount userAccount) {
-            throw new RepositoryAccessException("db unavailable");
+            throw new RuntimeException("db unavailable");
         }
 
         @Override
         public void updateLoginTime(String userId, LocalDateTime loginTime) {
-            throw new RepositoryAccessException("db unavailable");
+            throw new RuntimeException("db unavailable");
         }
     }
 
